@@ -11,13 +11,19 @@ export default function NewStorePage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("Estado de autenticación:", { isSignedIn, user });
+    
     if (!isSignedIn) {
+      console.log("Usuario no autenticado, redirigiendo a sign-in");
       toast.error("Debes iniciar sesión para crear una tienda");
       router.push("/sign-in");
+    } else {
+      console.log("Usuario autenticado:", user);
     }
-  }, [isSignedIn, router]);
+  }, [isSignedIn, router, user]);
 
   if (!isSignedIn) {
+    console.log("Renderizando null porque no hay usuario autenticado");
     return null;
   }
 

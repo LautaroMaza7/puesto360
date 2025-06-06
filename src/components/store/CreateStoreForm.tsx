@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 export default function CreateStoreForm() {
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,9 +23,16 @@ export default function CreateStoreForm() {
     phone: "",
   });
 
+  useEffect(() => {
+    console.log("CreateStoreForm - Estado del usuario:", { isSignedIn, user });
+  }, [isSignedIn, user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Intentando crear tienda con usuario:", user);
+    
     if (!user?.id) {
+      console.error("No hay ID de usuario disponible");
       toast.error("Debes iniciar sesión para crear una tienda");
       return;
     }
@@ -52,7 +59,10 @@ export default function CreateStoreForm() {
         }
       };
 
+      console.log("Datos de la tienda a crear:", storeData);
       const docRef = await addDoc(collection(db, "stores"), storeData);
+      console.log("Tienda creada con ID:", docRef.id);
+      
       toast.success("Tienda creada exitosamente");
       router.push(`/store/${docRef.id}`);
     } catch (error) {
