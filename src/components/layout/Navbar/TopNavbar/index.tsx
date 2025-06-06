@@ -17,7 +17,7 @@ import ResTopNavbar from "./ResTopNavbar";
 import CartBtn from "./CartBtn";
 import { UserButton, useUser, SignInButton, useClerk } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User, Settings, Store } from "lucide-react";
+import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User, Settings, Store, ShoppingBag, Heart, MapPin, CreditCard, HelpCircle } from "lucide-react";
 import { useCart } from "@/lib/hooks/useCart";
 import { getLocalCart } from "@/utils/cartUtils";
 import { useFilter } from '@/context/FilterContext';
@@ -638,17 +638,56 @@ const TopNavbar = () => {
                       <Store className="mr-2 h-4 w-4" />
                       <span>Mi Tienda</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push(`/admin/${storeId}`)}>
+                    <DropdownMenuItem onClick={() => router.push(`/account`)}>
                       <Settings className="mr-2 h-4 w-4" />
-                      <span>Panel de Control</span>
+                      <span>Mi Cuenta</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/orders`)}>
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      <span>Mis Pedidos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/wishlist`)}>
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Lista de Deseos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/addresses`)}>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      <span>Mis Direcciones</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/payment-methods`)}>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      <span>Métodos de Pago</span>
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  <DropdownMenuItem onClick={() => router.push("/store/new")}>
-                    <Store className="mr-2 h-4 w-4" />
-                    <span>Crear Tienda</span>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={() => router.push("/store/new")}>
+                      <Store className="mr-2 h-4 w-4" />
+                      <span>Crear Tienda</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/orders`)}>
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      <span>Mis Pedidos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/wishlist`)}>
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Lista de Deseos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/addresses`)}>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      <span>Mis Direcciones</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/payment-methods`)}>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      <span>Métodos de Pago</span>
+                    </DropdownMenuItem>
+                  </>
                 )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push(`/help`)}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  <span>Ayuda y Soporte</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut className="mr-2 h-4 w-4" />
