@@ -19,7 +19,15 @@ export default authMiddleware({
     "/api/products",
     "/api/categories",
     "/api/auth(.*)"
-  ]
+  ],
+  afterAuth(auth, req, evt) {
+    // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
+    if (!auth.userId && !auth.isPublicRoute) {
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', req.url);
+      return Response.redirect(signInUrl);
+    }
+  }
 });
 
 export const config = {
