@@ -15,9 +15,9 @@ import Image from "next/image";
 import InputGroup from "@/components/ui/input-group";
 import ResTopNavbar from "./ResTopNavbar";
 import CartBtn from "./CartBtn";
-import { UserButton, useUser, SignInButton } from "@clerk/nextjs";
+import { UserButton, useUser, SignInButton, useClerk } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User } from "lucide-react";
+import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User, Settings } from "lucide-react";
 import { useCart } from "@/lib/hooks/useCart";
 import { getLocalCart } from "@/utils/cartUtils";
 import { useFilter } from '@/context/FilterContext';
@@ -29,6 +29,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 const data: NavMenu = [
@@ -348,6 +349,7 @@ const SearchModal = ({
 
 const TopNavbar = () => {
   const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const { cart, loading: cartLoading, totalQuantity } = useCart();
   const [localCartCount, setLocalCartCount] = useState(
     getLocalCart().reduce((acc, item) => acc + item.quantity, 0)
@@ -585,26 +587,56 @@ const TopNavbar = () => {
           )}
 
           {isSignedIn ? (
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  userButtonPopoverFooter: () => (
-                    <div className="flex flex-col gap-2 p-2">
-                      <Link href="/perfil" className="text-sm hover:underline">
-                        Mi perfil
-                      </Link>
-                      <Link href="/mis-tiendas" className="text-sm hover:underline">
-                        Mis tiendas
-                      </Link>
-                      <Link href="/soporte" className="text-sm hover:underline">
-                        Soporte
-                      </Link>
-                    </div>
-                  ),
-                },
-              }}
-            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      userButtonPopoverFooter: "hidden",
+                      userButtonOuterIdentifier: "pointer-events-none",
+                      avatarBox: "w-10 h-10 cursor-pointer"
+                    },
+                  }}
+                />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuItem className="cursor-default">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.fullName || user?.username || "Usuario"}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.primaryEmailAddress?.emailAddress || "N/A"}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/perfil" className="flex items-center w-full">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Mi perfil</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/mis-tiendas" className="flex items-center w-full">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Mis tiendas</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/soporte" className="flex items-center w-full">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Soporte</span>
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer" onClick={() => signOut(() => router.push('/'))}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Cerrar sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <SignInButton mode="modal">
               <button className="text-sm font-medium text-gray-700 hover:text-gray-800">
