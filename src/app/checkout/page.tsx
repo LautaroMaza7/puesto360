@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSession, signIn } from "next-auth/react";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { saveAddressToFirestore } from "@/lib/saveAddressToFirestore";
