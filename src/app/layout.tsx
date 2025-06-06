@@ -55,7 +55,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        baseTheme: undefined,
+        variables: {
+          colorPrimary: '#000000',
+          colorText: '#000000',
+          colorBackground: '#ffffff',
+          colorInputBackground: '#ffffff',
+          colorInputText: '#000000',
+        },
+      }}
+    >
       <html lang="es" className={cn(satoshi.variable)}>
         <body className={cn("min-h-screen bg-white antialiased")}>
           <Providers>

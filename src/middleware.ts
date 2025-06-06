@@ -1,4 +1,4 @@
-import { authMiddleware } from "@clerk/nextjs/server";
+import { authMiddleware } from "@clerk/nextjs";
 
 export default authMiddleware({
   // Rutas públicas que no requieren autenticación
@@ -9,7 +9,14 @@ export default authMiddleware({
     "/api/products",
     "/api/categories",
     "/product/:path*",
-    "/category/:path*"
+    "/category/:path*",
+    "/sign-in",
+    "/sign-up"
+  ],
+  ignoredRoutes: [
+    "/api/webhook",
+    "/api/products",
+    "/api/categories"
   ]
 });
 
