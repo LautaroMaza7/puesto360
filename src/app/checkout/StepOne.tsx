@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   collection,
   getDocs,
@@ -22,6 +24,7 @@ import {
 import clsx from "clsx";
 import { satoshi } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
+import { useUser } from "@clerk/nextjs";
 
 interface SavedProfile extends Step1Data {
   id: string;
@@ -122,8 +125,8 @@ const StepOne = ({
   setUseSaved,
   onNext,
 }: StepOneProps) => {
-  const { data: session } = useSession();
-  const user = session?.user;
+  const { isSignedIn, user } = useUser();
+  const router = useRouter();
   const [savedProfiles, setSavedProfiles] = useState<SavedProfile[]>([]);
   const [showSavedInfo, setShowSavedInfo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -147,14 +150,14 @@ const StepOne = ({
   // Obtener datos guardados
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user || !user.email) return;
+      if (!user || !user.primaryEmailAddress?.emailAddress) return;
 
-      setValue("email", user.email);
+      setValue("email", user.primaryEmailAddress.emailAddress);
 
       const profilesCollection = collection(
         db,
         "users",
-        user.email,
+        user.primaryEmailAddress.emailAddress,
         "profiles"
       );
       const profilesSnapshot = await getDocs(profilesCollection);
@@ -234,7 +237,7 @@ const StepOne = ({
   };
 
   const handleNext = async () => {
-    if (!user?.email) {
+    if (!user?.primaryEmailAddress?.emailAddress) {
       setErrorMessage("Debes iniciar sesión para continuar");
       return;
     }
@@ -254,14 +257,14 @@ const StepOne = ({
         fullName,
         phone,
         dni,
-        email: user.email,
+        email: user.primaryEmailAddress.emailAddress,
         createdAt: new Date().toISOString(),
       };
 
       const userProfilesCollection = collection(
         db,
         "users",
-        user.email,
+        user.primaryEmailAddress.emailAddress,
         "profiles"
       );
 
@@ -327,6 +330,16 @@ const StepOne = ({
       icon: DocumentTextIcon,
     },
   ];
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      router.push("/sign-in");
+    }
+  }, [isSignedIn, router]);
+
+  if (!isSignedIn) {
+    return null;
+  }
 
   return (
     <motion.div

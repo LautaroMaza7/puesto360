@@ -34,7 +34,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { ImageUploader } from '@/components/admin/ImageUploader'
 import { Label as UILabel } from '@/components/ui/label'
 import Link from 'next/link'
-import { useAuth0 } from "@auth0/auth0-react"
+import { useUser } from "@clerk/nextjs"
 import { getStoreByOwnerId } from "@/services/storeService"
 import { Store } from "@/types/store"
 
@@ -96,7 +96,7 @@ const categories = [
 ]
 
 export default function NewProductPage() {
-  const { user, isAuthenticated } = useAuth0()
+  const { isSignedIn, user } = useUser()
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -107,30 +107,10 @@ export default function NewProductPage() {
   const [store, setStore] = useState<Store | null>(null)
 
   useEffect(() => {
-    const checkStore = async () => {
-      if (isAuthenticated && user?.sub) {
-        const storeData = await getStoreByOwnerId(user.sub)
-        if (!storeData) {
-          toast({
-            title: "Error",
-            description: "Debes crear una tienda antes de publicar productos.",
-            variant: "destructive",
-          })
-          router.push("/store/new")
-        } else {
-          setStore(storeData)
-        }
-      }
+    if (!isSignedIn) {
+      router.push("/sign-in")
     }
-
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/api/auth/login")
-      } else {
-        checkStore()
-      }
-    }
-  }, [isAuthenticated, isLoading, user, router, toast])
+  }, [isSignedIn, router])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -304,12 +284,8 @@ export default function NewProductPage() {
     }
   }
 
-  if (!store) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
-    )
+  if (!isSignedIn) {
+    return null;
   }
 
   return (

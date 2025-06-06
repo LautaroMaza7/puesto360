@@ -15,8 +15,7 @@ import Image from "next/image";
 import InputGroup from "@/components/ui/input-group";
 import ResTopNavbar from "./ResTopNavbar";
 import CartBtn from "./CartBtn";
-import { useAuth0 } from "@auth0/auth0-react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { UserButton, useUser, SignInButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User } from "lucide-react";
 import { useCart } from "@/lib/hooks/useCart";
@@ -25,8 +24,12 @@ import { useFilter } from '@/context/FilterContext';
 import { Product } from '@/types/product';
 import { useRouter } from 'next/navigation';
 import { ProductImage } from '@/components/ui/ProductImage'
-import { signIn, signOut, useSession } from "next-auth/react";
-import { UserButton, useUser, SignInButton } from "@clerk/nextjs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const data: NavMenu = [
   {
@@ -101,7 +104,7 @@ const data: NavMenu = [
   },
 ];
 
-const DropdownContent = motion(DropdownMenu.Content);
+const DropdownContent = motion(DropdownMenuContent);
 const MAX_RECENT_SEARCHES = 5;
 
 const SearchModal = ({

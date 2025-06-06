@@ -13,16 +13,22 @@ import React, { useState, useEffect } from "react";
 import { useCart } from "@/lib/hooks/useCart";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 import { PLACEHOLDER_IMAGE } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CartPage() {
   const router = useRouter();
   const { cart, loading } = useCart();
-  const { user, isAuthenticated } = useAuth0();
+  const { isSignedIn, user } = useUser();
   const [showAllItems, setShowAllItems] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      router.push("/sign-in");
+    }
+  }, [isSignedIn, router]);
 
   // Detectar si es dispositivo móvil
   useEffect(() => {
@@ -83,7 +89,9 @@ export default function CartPage() {
         body: JSON.stringify({
           items: cart ? cart.items : [],
           userEmail:
-            isAuthenticated && user?.email ? user.email : "invitado@email.com",
+            isSignedIn && user?.primaryEmailAddress?.emailAddress 
+              ? user.primaryEmailAddress.emailAddress 
+              : "invitado@email.com",
         }),
       });
 
@@ -113,6 +121,10 @@ export default function CartPage() {
       maximumFractionDigits: 2
     });
   };
+
+  if (!isSignedIn) {
+    return null;
+  }
 
   if (loading) {
     return (

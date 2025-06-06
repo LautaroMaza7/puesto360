@@ -19,7 +19,7 @@ import {
 import { Toggle } from '@/components/ui/toggle'
 import { User, UserX } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useAuth0 } from '@auth0/auth0-react'
+import { useUser } from "@clerk/nextjs"
 import { collection, getDocs, updateDoc, doc, query, where, Query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useRouter } from 'next/navigation'
@@ -29,7 +29,11 @@ import { es } from 'date-fns/locale'
 interface UserData {
   id: string
   name: string
+  fullName?: string
   email: string
+  primaryEmailAddress?: {
+    emailAddress: string
+  }
   role: string
   createdAt: Date
   active: boolean
@@ -38,7 +42,7 @@ interface UserData {
 }
 
 export default function UsersPage() {
-  const { isAuthenticated, isLoading, user } = useAuth0()
+  const { isSignedIn, user } = useUser()
   const router = useRouter()
   const [users, setUsers] = useState<UserData[]>([])
   const [userStates, setUserStates] = useState<Record<string, boolean>>({})
@@ -46,10 +50,10 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all')
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/')
+    if (!isSignedIn) {
+      router.push("/sign-in")
     }
-  }, [isLoading, isAuthenticated, router])
+  }, [isSignedIn, router])
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -98,10 +102,10 @@ export default function UsersPage() {
       }
     }
 
-    if (isAuthenticated) {
+    if (isSignedIn) {
       fetchUsers()
     }
-  }, [isAuthenticated, roleFilter])
+  }, [isSignedIn, roleFilter])
 
   const handleToggle = async (userId: string) => {
     try {
@@ -122,11 +126,11 @@ export default function UsersPage() {
     }
   }
 
-  if (isLoading || loading) {
+  if (loading) {
     return <div>Cargando...</div>
   }
 
-  if (!isAuthenticated || user?.email !== 'mazalautaro.dev@gmail.com') {
+  if (!isSignedIn) {
     return null
   }
 
@@ -170,8 +174,8 @@ export default function UsersPage() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
+                <TableCell className="font-medium">{user.fullName || user.name}</TableCell>
+                <TableCell>{user.primaryEmailAddress?.emailAddress || user.email}</TableCell>
                 <TableCell>
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
