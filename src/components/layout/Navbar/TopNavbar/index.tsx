@@ -589,16 +589,18 @@ const TopNavbar = () => {
           {isSignedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <UserButton
-                  afterSignOutUrl="/"
-                  appearance={{
-                    elements: {
-                      userButtonPopoverFooter: "hidden",
-                      userButtonOuterIdentifier: "pointer-events-none",
-                      avatarBox: "w-10 h-10 cursor-pointer"
-                    },
-                  }}
-                />
+                <div className="cursor-pointer">
+                  <UserButton
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        userButtonPopoverCard: "hidden",
+                        userButtonOuterIdentifier: "pointer-events-none",
+                        avatarBox: "w-10 h-10",
+                      },
+                    }}
+                  />
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuItem className="cursor-default">

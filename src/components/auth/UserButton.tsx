@@ -10,10 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, Settings, LogOut } from "lucide-react"; // Asegúrate de tener lucide-react instalado
+import { useRouter } from "next/navigation";
 
 export default function UserButtonComponent() {
   const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
+  const router = useRouter();
 
   if (!isSignedIn) {
     // Si el usuario no está logueado, podrías renderizar algo diferente, o nada.
@@ -25,17 +27,22 @@ export default function UserButtonComponent() {
     <DropdownMenu>
       {/* Usamos el UserButton de Clerk como trigger */}
       <DropdownMenuTrigger asChild>
-        <UserButton
-          afterSignOutUrl="/"
-          appearance={{
-            elements: {
-              // Ocultamos el popover por defecto de Clerk
-              userButtonPopoverCard: "hidden",
-              // Estilos para el avatar/botón si los necesitas
-               avatarBox: "w-10 h-10 cursor-pointer",
-            },
-          }}
-        />
+        {/* Envolvemos UserButton en un div para asegurar que el trigger de Shadcn funcione */}
+        <div className="cursor-pointer">
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                // Ocultamos el popover por defecto de Clerk
+                userButtonPopoverCard: "hidden",
+                // Aseguramos que el área exterior no tenga comportamiento por defecto
+                userButtonOuterIdentifier: "pointer-events-none",
+                // Estilos para el avatar/botón
+                avatarBox: "w-10 h-10",
+              },
+            }}
+          />
+        </div>
       </DropdownMenuTrigger>
       
       {/* Contenido del DropdownMenu personalizado de Shadcn UI */}
@@ -58,7 +65,6 @@ export default function UserButtonComponent() {
             <span>Mi perfil</span>
           </Link>
         </DropdownMenuItem>
-        {/* Puedes agregar más DropdownMenuItem aquí con tus enlaces */}
          <DropdownMenuItem asChild>
           <Link href="/mis-tiendas" className="flex items-center w-full">
              {/* Cambia el icono si tienes uno de tienda */}
@@ -76,7 +82,7 @@ export default function UserButtonComponent() {
 
         {/* Opción de Cerrar Sesión usando la función de Clerk */}
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer" onClick={() => signOut(() => { /* Redirigir o hacer algo después de cerrar sesión si es necesario */ }) }>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => signOut(() => router.push('/'))}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Cerrar sesión</span>
         </DropdownMenuItem>
