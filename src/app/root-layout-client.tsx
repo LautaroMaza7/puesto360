@@ -19,25 +19,23 @@ export default function RootLayoutClient({
   const isAdminRoute = pathname?.startsWith('/admin');
 
   return (
-    <body>
-      <Providers>
-        <FilterProvider>
-          <ToastProvider>
-            <ServiceWorkerRegistration />
-            {!isAdminRoute && (
-              <>
-                <TopBanner />
-                <TopNavbar />
-              </>
-            )}
-            <main className="min-h-screen">
-              {children}
-            </main>
-            {!isAdminRoute && <Footer />}
-            <Toaster />
-          </ToastProvider>
-        </FilterProvider>
-      </Providers>
-    </body>
+    <Providers>
+      <FilterProvider>
+        <ToastProvider>
+          <ServiceWorkerRegistration />
+          {!isAdminRoute && (
+            <>
+              <TopBanner />
+              <TopNavbar />
+            </>
+          )}
+          <main className="min-h-screen">
+            {children}
+          </main>
+          {!isAdminRoute && <Footer />}
+          <Toaster />
+        </ToastProvider>
+      </FilterProvider>
+    </Providers>
   );
 } 

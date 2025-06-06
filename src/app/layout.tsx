@@ -55,27 +55,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider
-      appearance={{
-        baseTheme: undefined,
-        variables: {
-          colorPrimary: '#000000',
-          colorText: '#000000',
-          colorBackground: '#ffffff',
-          colorInputBackground: '#ffffff',
-          colorInputText: '#000000',
-        },
-      }}
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-    >
-      <html lang="es" className={cn(satoshi.variable)}>
-        <body className={cn("min-h-screen bg-white antialiased")}>
+    <html lang="es" className={cn(satoshi.variable)}>
+      <body className={cn("min-h-screen bg-white antialiased")}>
+        <ClerkProvider
+          appearance={{
+            baseTheme: undefined,
+            variables: {
+              colorPrimary: '#000000',
+              colorText: '#000000',
+              colorBackground: '#ffffff',
+              colorInputBackground: '#ffffff',
+              colorInputText: '#000000',
+            },
+          }}
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        >
           <Providers>
             <RootLayoutClient>{children}</RootLayoutClient>
           </Providers>
           <Toaster />
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
