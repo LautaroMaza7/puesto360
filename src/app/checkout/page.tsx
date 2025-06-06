@@ -62,10 +62,7 @@ const checkoutSteps = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const isAuthenticated = !!session;
-  const user = session?.user;
-  const authLoading = status === "loading";
+  const { isSignedIn, user } = useUser();
   const { cart, loading: cartLoading } = useCart();
   const [checkoutData, setCheckoutData] = useState<any>(null);
   const [step, setStep] = useState(0);
@@ -73,7 +70,6 @@ export default function CheckoutPage() {
   const [useSavedInfo, setUseSavedInfo] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [shippingMethod, setShippingMethod] = useState('delivery');
-  const { isSignedIn, user: clerkUser } = useUser();
 
   // Efecto para scroll al cambiar de paso
   useEffect(() => {
@@ -113,8 +109,8 @@ export default function CheckoutPage() {
 
   // Setear el email del usuario una vez esté disponible
   useEffect(() => {
-    if (user?.email) {
-      methodsStepOne.setValue("email", user.email);
+    if (user?.primaryEmailAddress?.emailAddress) {
+      methodsStepOne.setValue("email", user.primaryEmailAddress.emailAddress);
     }
   }, [user, methodsStepOne]);
 
@@ -148,14 +144,14 @@ export default function CheckoutPage() {
     try {
       console.log("📝 Datos Step 1:", data);
 
-      if (user?.email && !useSavedInfo) {
+      if (user?.primaryEmailAddress?.emailAddress && !useSavedInfo) {
         const data = {
-          email: user.email,
-          name: user.name,
+          email: user.primaryEmailAddress.emailAddress,
+          name: user.fullName,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
-        await setDoc(doc(db, "users", user.email), data, { merge: true });
+        await setDoc(doc(db, "users", user.primaryEmailAddress.emailAddress), data, { merge: true });
         console.log("✅ Datos del usuario guardados en Firestore correctamente");
       }
 
@@ -169,8 +165,8 @@ export default function CheckoutPage() {
     try {
       console.log("📦 Dirección Step 2:", data);
 
-      if (user?.email) {
-        await saveAddressToFirestore(user.email, data);
+      if (user?.primaryEmailAddress?.emailAddress) {
+        await saveAddressToFirestore(user.primaryEmailAddress.emailAddress, data);
         console.log("✅ Dirección guardada correctamente en Firestore");
       }
 
@@ -292,7 +288,7 @@ export default function CheckoutPage() {
   }
 
   // Mostrar estado de carga
-  if (isLoading || authLoading || cartLoading) {
+  if (isLoading) {
     return (
       <main className="pb-20">
         <div className="max-w-frame mx-auto px-4 xl:px-0">
@@ -335,7 +331,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (isAuthenticated) {
+  if (isSignedIn) {
     return (
       <main className="pb-20">
         <div className="max-w-frame mx-auto px-4 xl:px-0">
@@ -438,7 +434,7 @@ export default function CheckoutPage() {
             Debes iniciar sesión para continuar con el proceso de pago.
           </p>
           <Button
-            onClick={() => signIn("auth0")}
+            onClick={() => router.push("/login")}
             className="bg-black text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-gray-800 transition-all shadow-md"
           >
             Iniciar Sesión
