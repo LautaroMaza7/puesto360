@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 import { doc, deleteDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
@@ -47,7 +47,7 @@ interface Order {
 }
 
 const SuccessPage = () => {
-  const { user, isAuthenticated } = useAuth0();
+  const { isSignedIn, user } = useUser();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFade, setShowFade] = useState(true);
@@ -108,8 +108,8 @@ const SuccessPage = () => {
 
     const clearCart = async () => {
       try {
-        if (isAuthenticated && user?.sub) {
-          const cartRef = doc(db, "carts", user.sub);
+        if (isSignedIn && user) {
+          const cartRef = doc(db, "carts", user.id);
           await deleteDoc(cartRef);
         }
         localStorage.removeItem("cart");
@@ -127,7 +127,7 @@ const SuccessPage = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, user, searchParams, orderUpdated]);
+  }, [isSignedIn, user, searchParams, orderUpdated]);
 
   const features = [
     {

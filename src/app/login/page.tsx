@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { SignInButton } from "@clerk/nextjs";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { isSignedIn, user } = useUser();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,7 +23,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      // El manejo del inicio de sesión ahora lo hace Clerk automáticamente
       toast.success("Inicio de sesión exitoso");
       router.push("/account");
     } catch (error) {
@@ -43,38 +44,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="tu@email.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-            />
-          </div>
-
+        <SignInButton mode="modal">
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : null}
             Iniciar Sesión
           </Button>
-        </form>
+        </SignInButton>
 
         <div className="text-center text-sm">
           <a href="/register" className="text-black hover:underline">

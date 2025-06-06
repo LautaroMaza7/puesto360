@@ -31,6 +31,7 @@ import clsx from "clsx";
 import { satoshi } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import DeliveryAddressInput from "@/components/checkout/DeliveryAddressInput";
+import { useUser } from "@clerk/nextjs";
 
 interface SavedAddress extends Step2Data {
   id: string;
@@ -150,8 +151,8 @@ const StepTwo = ({
   onNext,
   setStep,
 }: StepTwoProps) => {
+  const { isSignedIn, user } = useUser();
   const { data: session } = useSession();
-  const user = session?.user;
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -208,10 +209,10 @@ const StepTwo = ({
   // Cargar direcciones guardadas
   useEffect(() => {
     const loadAddresses = async () => {
-      if (!user?.email) return;
+      if (!user?.primaryEmailAddress?.emailAddress) return;
 
       try {
-        const addressesRef = collection(db, "users", user.email, "addresses");
+        const addressesRef = collection(db, "users", user.primaryEmailAddress.emailAddress, "addresses");
         const q = query(addressesRef, orderBy("isFavorite", "desc"));
         const querySnapshot = await getDocs(q);
         const addresses = querySnapshot.docs.map(doc => ({
@@ -235,7 +236,7 @@ const StepTwo = ({
     };
 
     loadAddresses();
-  }, [user?.email, setValue]);
+  }, [user?.primaryEmailAddress?.emailAddress, setValue]);
 
   // Cargar sucursales
   useEffect(() => {
@@ -345,7 +346,7 @@ const StepTwo = ({
   };
 
   const handleNext = async () => {
-    if (!user?.email) {
+    if (!user?.primaryEmailAddress?.emailAddress) {
       setErrorMessage("Debes iniciar sesión para continuar");
       return;
     }
@@ -472,7 +473,7 @@ const StepTwo = ({
         };
 
         if (!useSaved || (selectedValue && isEditing)) {
-          const userAddressesCollection = collection(db, "users", user.email, "addresses");
+          const userAddressesCollection = collection(db, "users", user.primaryEmailAddress.emailAddress, "addresses");
 
           if (selectedValue && isEditing) {
             const addressRef = doc(userAddressesCollection, selectedValue);

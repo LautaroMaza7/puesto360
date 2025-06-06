@@ -1,6 +1,6 @@
 import { Step1Data, Step2Data, Step3Data } from "./schema";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { doc, setDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { v4 as uuidv4 } from "uuid";
@@ -64,8 +64,7 @@ const StepThree = ({
   cart,
   setStep,
 }: StepThreeProps) => {
-  const { data: session } = useSession();
-  const user = session?.user;
+  const { isSignedIn, user } = useUser();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -105,7 +104,7 @@ const StepThree = ({
   }, [watch, trigger]);
 
   const handlePayment = async () => {
-    if (!user?.email) {
+    if (!user?.primaryEmailAddress?.emailAddress) {
       setErrorMessage("Debes iniciar sesión para continuar");
       return;
     }
@@ -118,7 +117,7 @@ const StepThree = ({
       const orderId = uuidv4();
       const orderData = {
         orderId,
-        userId: user.email,
+        userId: user.primaryEmailAddress.emailAddress,
         customerInfo: {
           fullName: step1Data.fullName,
           email: step1Data.email,
@@ -151,7 +150,7 @@ const StepThree = ({
           })),
           orderId: orderId,
           payer: {
-            email: user.email,
+            email: user.primaryEmailAddress.emailAddress,
             name: step1Data.fullName,
           },
         }),

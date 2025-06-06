@@ -37,6 +37,7 @@ import Link from "next/link";
 import { validateLocation, calculateDistance } from '@/lib/validations'
 import { Product } from "./components/OrderSummary"
 import { PLACEHOLDER_IMAGE } from '@/lib/constants'
+import { useUser } from "@clerk/nextjs";
 
 const checkoutSteps = [
   {
@@ -72,6 +73,7 @@ export default function CheckoutPage() {
   const [useSavedInfo, setUseSavedInfo] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [shippingMethod, setShippingMethod] = useState('delivery');
+  const { isSignedIn, user: clerkUser } = useUser();
 
   // Efecto para scroll al cambiar de paso
   useEffect(() => {

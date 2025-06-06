@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { Loader2, Upload } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useUser } from "@clerk/nextjs";
 import { ProductImage } from '@/components/ui/ProductImage'
 
 interface ImageUploaderProps {
@@ -24,7 +24,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [previewUrls, setPreviewUrls] = useState<string[]>(initialImages)
-  const { data: session } = useSession()
+  const { isSignedIn, user } = useUser()
 
   // Actualizar las URLs de vista previa cuando cambian las imágenes iniciales
   useEffect(() => {
@@ -140,7 +140,7 @@ export function ImageUploader({
         )}
       </div>
 
-      {!session && (
+      {!isSignedIn && (
         <div className="text-center text-sm text-muted-foreground">
           Debes iniciar sesión para subir imágenes
         </div>
