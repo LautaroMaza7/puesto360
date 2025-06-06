@@ -32,7 +32,7 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({ data }: ProductCardProps) => {
-  const { user, isAuthenticated } = useAuth0();
+  const { user, isSignedIn } = useUser();
 
   const priceDetails = useMemo(() => {
     const totalPrice = data.totalPrice || data.quantity * data.price;
@@ -67,12 +67,12 @@ const ProductCard = ({ data }: ProductCardProps) => {
   });
 
   const updateCart = async (updatedItem: CartItem, action: "add" | "remove" | "delete") => {
-    if (!isAuthenticated || !user?.sub) {
+    if (!isSignedIn || !user?.primaryEmailAddress?.emailAddress) {
       updateLocalCart(updatedItem, action);
       return;
     }
 
-    const userId = user.sub;
+    const userId = user.primaryEmailAddress.emailAddress;
     const cartRef = doc(db, "carts", userId);
     const cartSnap = await getDoc(cartRef);
     if (!cartSnap.exists()) return;
