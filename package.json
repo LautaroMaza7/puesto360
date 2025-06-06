@@ -12,7 +12,8 @@
     "verify-firebase": "node src/scripts/verifyFirebase.js",
     "migrate:title-to-name": "node src/scripts/migrateTitleToName.js",
     "verify-products": "node src/scripts/verifyAndUpdateProducts.js",
-    "upload-products": "node src/scripts/uploadProducts.js"
+    "upload-products": "node src/scripts/uploadProducts.js",
+    "create-store": "node src/scripts/createStoreAndProducts.js"
   },
   "dependencies": {
     "@clerk/nextjs": "4.29.7",
@@ -50,6 +51,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^11.6.0",
     "framer-motion": "^11.18.2",

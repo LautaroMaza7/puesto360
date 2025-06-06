@@ -25,7 +25,18 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // Cachear cada URL individualmente para manejar errores
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            cache.add(url).catch(error => {
+              console.warn(`Error caching ${url}:`, error);
+              return null;
+            })
+          )
+        );
+      })
+      .catch(error => {
+        console.error('Error during service worker installation:', error);
       })
   );
 });
@@ -63,8 +74,8 @@ self.addEventListener('fetch', (event) => {
         // Clonar la petición
         const fetchRequest = event.request.clone();
 
-        return fetch(fetchRequest).then(
-          (response) => {
+        return fetch(fetchRequest)
+          .then((response) => {
             // Verificar si la respuesta es válida
             if(!response || response.status !== 200 || response.type !== 'basic') {
               return response;
@@ -73,19 +84,25 @@ self.addEventListener('fetch', (event) => {
             // Clonar la respuesta
             const responseToCache = response.clone();
 
+            // Intentar cachear la respuesta
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
+              })
+              .catch(error => {
+                console.warn('Error caching response:', error);
               });
 
             return response;
-          }
-        ).catch(() => {
-          // Si falla la red y es una petición de documento, mostrar página offline
-          if (event.request.mode === 'navigate') {
-            return caches.match('/offline.html');
-          }
-        });
+          })
+          .catch((error) => {
+            console.warn('Fetch failed:', error);
+            // Si falla la red y es una petición de documento, mostrar página offline
+            if (event.request.mode === 'navigate') {
+              return caches.match('/offline.html');
+            }
+            return new Response('Network error', { status: 503 });
+          });
       })
   );
 }); 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ export default function CreateStoreForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.primaryEmailAddress?.emailAddress) {
+    if (!user?.id) {
       toast.error("Debes iniciar sesión para crear una tienda");
       return;
     }
@@ -34,9 +34,22 @@ export default function CreateStoreForm() {
     try {
       const storeData = {
         ...formData,
-        ownerId: user.primaryEmailAddress.emailAddress,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        ownerId: user.id,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        status: 'active',
+        categories: [],
+        rating: 0,
+        totalSales: 0,
+        totalProducts: 0,
+        contactInfo: {
+          email: user.primaryEmailAddress?.emailAddress || '',
+          phone: formData.phone,
+          address: formData.address
+        },
+        settings: {
+          shippingEnabled: true
+        }
       };
 
       const docRef = await addDoc(collection(db, "stores"), storeData);

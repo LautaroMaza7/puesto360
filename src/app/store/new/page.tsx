@@ -13,7 +13,7 @@ export default function NewStorePage() {
   useEffect(() => {
     if (!isSignedIn) {
       toast.error("Debes iniciar sesión para crear una tienda");
-      router.push("/login");
+      router.push("/sign-in");
     }
   }, [isSignedIn, router]);
 
