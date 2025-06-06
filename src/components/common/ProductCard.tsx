@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Product } from "@/types/product";
 import Rating from "../ui/Rating";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 import { useCart } from "@/lib/hooks/useCart";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,7 +25,7 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDiscountBadge = false }: ProductCardProps) => {
-  const { user, isAuthenticated } = useAuth0();
+  const { user, isSignedIn } = useUser();
   const { cart } = useCart();
   const { toast } = useToast();
   const router = useRouter();
@@ -136,8 +136,8 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                       productId: data.id,
                     };
 
-                    if (isAuthenticated && user?.sub) {
-                      const userId = user.sub;
+                    if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+                      const userId = user.primaryEmailAddress.emailAddress;
                       const cartRef = doc(collection(db, "carts"), userId);
                       getDoc(cartRef).then((snapshot) => {
                         if (snapshot.exists()) {
@@ -219,8 +219,8 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                       productId: data.id,
                     };
 
-                    if (isAuthenticated && user?.sub) {
-                      const userId = user.sub;
+                    if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+                      const userId = user.primaryEmailAddress.emailAddress;
                       const cartRef = doc(collection(db, "carts"), userId);
                       getDoc(cartRef).then((snapshot) => {
                         if (snapshot.exists()) {
@@ -304,8 +304,8 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                     productId: data.id,
                   };
 
-                  if (isAuthenticated && user?.sub) {
-                    const userId = user.sub;
+                  if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+                    const userId = user.primaryEmailAddress.emailAddress;
                     const cartRef = doc(collection(db, "carts"), userId);
                     getDoc(cartRef).then((snapshot) => {
                       if (snapshot.exists()) {

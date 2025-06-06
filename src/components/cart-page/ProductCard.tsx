@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { PiTrashFill } from "react-icons/pi";
 import Image from "next/image";
 import Link from "next/link";
 import CartCounter from "@/components/ui/CartCounter";
 import { Button } from "@/components/ui/button";
 import { CartItem } from "@/lib/features/carts/cartsSlice";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "../../components/ui/badge";
+import { MinusIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 type ProductCardProps = {
   data: CartItem & { 
