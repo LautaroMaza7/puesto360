@@ -17,12 +17,12 @@ import ResTopNavbar from "./ResTopNavbar";
 import CartBtn from "./CartBtn";
 import { UserButton, useUser, SignInButton, useClerk } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User, Settings } from "lucide-react";
+import { LogOut, ChevronDown, Clock, Search as SearchIcon, X, User, Settings, Store } from "lucide-react";
 import { useCart } from "@/lib/hooks/useCart";
 import { getLocalCart } from "@/utils/cartUtils";
 import { useFilter } from '@/context/FilterContext';
 import { Product } from '@/types/product';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { ProductImage } from '@/components/ui/ProductImage'
 import {
   DropdownMenu,
@@ -30,7 +30,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
 
 const data: NavMenu = [
   {
@@ -363,6 +367,7 @@ const TopNavbar = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [storeId, setStoreId] = useState<string | null>(null);
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
@@ -455,6 +460,28 @@ const TopNavbar = () => {
   };
 
   const totalItems = isSignedIn ? totalQuantity : localCartCount;
+
+  useEffect(() => {
+    const fetchUserStore = async () => {
+      if (!isSignedIn || !user?.id) return;
+
+      try {
+        const storesQuery = query(
+          collection(db, "stores"),
+          where("ownerId", "==", user.id)
+        );
+
+        const querySnapshot = await getDocs(storesQuery);
+        if (!querySnapshot.empty) {
+          setStoreId(querySnapshot.docs[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching user store:", error);
+      }
+    };
+
+    fetchUserStore();
+  }, [isSignedIn, user?.id]);
 
   return (
     <nav className="sticky top-0 bg-white z-20 border-b border-black/10">
@@ -602,40 +629,30 @@ const TopNavbar = () => {
                   />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuItem className="cursor-default">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.fullName || user?.username || "Usuario"}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.primaryEmailAddress?.emailAddress || "N/A"}
-                    </p>
-                  </div>
-                </DropdownMenuItem>
-
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/perfil" className="flex items-center w-full">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Mi perfil</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/mis-tiendas" className="flex items-center w-full">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Mis tiendas</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/soporte" className="flex items-center w-full">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Soporte</span>
-                  </Link>
-                </DropdownMenuItem>
-
+                {storeId ? (
+                  <>
+                    <DropdownMenuItem onClick={() => router.push(`/store/${storeId}`)}>
+                      <Store className="mr-2 h-4 w-4" />
+                      <span>Mi Tienda</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push(`/admin/${storeId}`)}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Panel de Control</span>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem onClick={() => router.push("/store/new")}>
+                    <Store className="mr-2 h-4 w-4" />
+                    <span>Crear Tienda</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={() => signOut(() => router.push('/'))}>
+                <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar sesión</span>
+                  <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
