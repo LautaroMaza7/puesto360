@@ -12,6 +12,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid;
     }
 
+    // Reglas para la colección de usuarios
+    match /users/{userId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
     // Reglas para la colección de tiendas
     match /stores/{storeId} {
       allow read: if true; // Lectura pública

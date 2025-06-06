@@ -18,14 +18,14 @@ export default function AdminRoute({ children }: AdminRouteProps) {
 
   useEffect(() => {
     const checkAdminRole = async () => {
-      if (!isSignedIn || !user?.primaryEmailAddress?.emailAddress) {
+      if (!isSignedIn || !user?.id) {
         setIsAdmin(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        const userDoc = await getDoc(doc(db, "users", user.primaryEmailAddress.emailAddress));
+        const userDoc = await getDoc(doc(db, "users", user.id));
         if (userDoc.exists() && userDoc.data().role === "admin") {
           setIsAdmin(true);
         } else {

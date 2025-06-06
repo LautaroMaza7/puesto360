@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
+import UserInitializer from "@/components/auth/UserInitializer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -55,27 +56,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={cn(satoshi.variable)}>
-      <body className={cn("min-h-screen bg-white antialiased")}>
-        <ClerkProvider
-          appearance={{
-            baseTheme: undefined,
-            variables: {
-              colorPrimary: '#000000',
-              colorText: '#000000',
-              colorBackground: '#ffffff',
-              colorInputBackground: '#ffffff',
-              colorInputText: '#000000',
-            },
-          }}
-          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-        >
+    <ClerkProvider>
+      <html lang="es" className={cn(satoshi.variable)}>
+        <body className={cn("min-h-screen bg-white antialiased")}>
+          <UserInitializer />
           <Providers>
             <RootLayoutClient>{children}</RootLayoutClient>
           </Providers>
           <Toaster />
-        </ClerkProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
