@@ -585,7 +585,26 @@ const TopNavbar = () => {
           )}
 
           {isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  userButtonPopoverFooter: () => (
+                    <div className="flex flex-col gap-2 p-2">
+                      <Link href="/perfil" className="text-sm hover:underline">
+                        Mi perfil
+                      </Link>
+                      <Link href="/mis-tiendas" className="text-sm hover:underline">
+                        Mis tiendas
+                      </Link>
+                      <Link href="/soporte" className="text-sm hover:underline">
+                        Soporte
+                      </Link>
+                    </div>
+                  ),
+                },
+              }}
+            />
           ) : (
             <SignInButton mode="modal">
               <button className="text-sm font-medium text-gray-700 hover:text-gray-800">
