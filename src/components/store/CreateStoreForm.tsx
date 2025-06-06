@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 export default function CreateStoreForm() {
-  const { user, isSignedIn } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,16 +24,25 @@ export default function CreateStoreForm() {
   });
 
   useEffect(() => {
-    console.log("CreateStoreForm - Estado del usuario:", { isSignedIn, user });
-  }, [isSignedIn, user]);
+    console.log("CreateStoreForm - Estado de autenticación:", {
+      isLoaded,
+      isSignedIn,
+      userId: user?.id,
+      email: user?.primaryEmailAddress?.emailAddress
+    });
+  }, [isLoaded, isSignedIn, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Intentando crear tienda con usuario:", user);
+    console.log("Intentando crear tienda con usuario:", {
+      id: user?.id,
+      email: user?.primaryEmailAddress?.emailAddress
+    });
     
     if (!user?.id) {
       console.error("No hay ID de usuario disponible");
       toast.error("Debes iniciar sesión para crear una tienda");
+      router.replace("/sign-in?redirect_url=/store/new");
       return;
     }
 
@@ -80,6 +89,10 @@ export default function CreateStoreForm() {
       [name]: value
     }));
   };
+
+  if (!isLoaded || !isSignedIn) {
+    return null;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
