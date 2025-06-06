@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Paper, Container, Typography, Box, Divider, Card, CardContent } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Definir la estructura de datos del formulario
 interface StoreFormData {
@@ -144,22 +146,57 @@ const initialFormData: StoreFormData = {
   termsAccepted: false,
 };
 
-// Componentes estilizados
+// Componentes estilizados mejorados
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   marginBottom: theme.spacing(4),
   borderRadius: theme.spacing(2),
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+  backdropFilter: 'blur(8px)',
+  background: 'rgba(255, 255, 255, 0.9)',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15)',
+  }
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3),
   color: theme.palette.primary.main,
   fontWeight: 600,
+  position: 'relative',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: -8,
+    left: 0,
+    width: '60px',
+    height: '3px',
+    background: theme.palette.primary.main,
+    borderRadius: '2px',
+  }
 }));
 
-const FormSection = styled(Box)(({ theme }) => ({
+const FormSection = styled(motion.div)(({ theme }) => ({
   marginBottom: theme.spacing(4),
+  padding: theme.spacing(3),
+  borderRadius: theme.spacing(2),
+  background: 'rgba(255, 255, 255, 0.5)',
+  backdropFilter: 'blur(4px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+}));
+
+// Componente de tarjeta animada
+const AnimatedCard = styled(motion.div)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderRadius: theme.spacing(2),
+  background: 'white',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 12px rgba(0, 0, 0, 0.1)',
+  }
 }));
 
 export default function CreateStoreForm() {
@@ -436,19 +473,48 @@ export default function CreateStoreForm() {
 
   // Si está autenticado, mostrar el formulario
   return (
-    <Container maxWidth="lg">
-      <form onSubmit={handleSubmit}>
+    <Container maxWidth="lg" className="py-8">
+      <motion.form 
+        onSubmit={handleSubmit}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <StyledPaper>
-          <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 4 }}>
-            Crear Nueva Tienda
-          </Typography>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom 
+              align="center" 
+              sx={{ 
+                mb: 4,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontWeight: 700
+              }}
+            >
+              Crear Nueva Tienda
+            </Typography>
+          </motion.div>
 
           {/* Sección: Datos Básicos */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <SectionTitle variant="h5">Datos Básicos</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="basicData.localName">Nombre del local <span className="text-red-500">*</span></Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <AnimatedCard>
+                <Label htmlFor="basicData.localName" className="text-lg font-medium">
+                  Nombre del local <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="basicData.localName"
                   name="basicData.localName"
@@ -456,11 +522,22 @@ export default function CreateStoreForm() {
                   onChange={handleInputChange}
                   required
                   maxLength={50}
-                  className={!!validationErrors.basicData?.localName ? "border-red-500" : ""}
+                  className={cn(
+                    "mt-2 transition-all duration-300",
+                    !!validationErrors.basicData?.localName ? "border-red-500" : "hover:border-primary focus:border-primary"
+                  )}
                 />
-                 {validationErrors.basicData?.localName && <p className="text-red-500 text-sm mt-1">{validationErrors.basicData.localName}</p>}
-              </div>
-              <div>
+                {validationErrors.basicData?.localName && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {validationErrors.basicData.localName}
+                  </motion.p>
+                )}
+              </AnimatedCard>
+              <AnimatedCard>
                 <Label htmlFor="basicData.galleryType">Galería <span className="text-red-500">*</span></Label>
                  <Select onValueChange={(value) => handleSelectChange('galleryType', value)} value={formData.basicData.galleryType}>
                    <SelectTrigger id="basicData.galleryType" className={!!validationErrors.basicData?.galleryType ? "border-red-500" : ""}>
@@ -473,8 +550,8 @@ export default function CreateStoreForm() {
                    </SelectContent>
                  </Select>
                   {validationErrors.basicData?.galleryType && <p className="text-red-500 text-sm mt-1">{validationErrors.basicData.galleryType}</p>}
-               </div>
-              <div>
+               </AnimatedCard>
+              <AnimatedCard>
                 <Label htmlFor="basicData.localNumber">Nº local <span className="text-red-500">*</span></Label>
                 <Input
                   id="basicData.localNumber"
@@ -487,17 +564,21 @@ export default function CreateStoreForm() {
                   className={!!validationErrors.basicData?.localNumber ? "border-red-500" : ""}
                 />
                  {validationErrors.basicData?.localNumber && <p className="text-red-500 text-sm mt-1">{validationErrors.basicData.localNumber}</p>}
-              </div>
+              </AnimatedCard>
             </div>
           </FormSection>
 
           <Divider sx={{ my: 4 }} />
 
           {/* Sección: Medios de Contacto */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
             <SectionTitle variant="h5">Medios de Contacto</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+              <AnimatedCard>
                 <Label htmlFor="contactInfo.whatsapp">Whatsapp <span className="text-red-500">*</span></Label>
                 <Input
                   id="contactInfo.whatsapp"
@@ -508,8 +589,8 @@ export default function CreateStoreForm() {
                   className={!!validationErrors.contactInfo?.whatsapp ? "border-red-500" : ""}
                 />
                  {validationErrors.contactInfo?.whatsapp && <p className="text-red-500 text-sm mt-1">{validationErrors.contactInfo.whatsapp}</p>}
-              </div>
-              <div>
+              </AnimatedCard>
+              <AnimatedCard>
                 <Label htmlFor="contactInfo.phoneNumber">Teléfono para llamadas</Label>
                 <Input
                   id="contactInfo.phoneNumber"
@@ -517,8 +598,8 @@ export default function CreateStoreForm() {
                   value={formData.contactInfo.phoneNumber}
                   onChange={handleInputChange}
                 />
-              </div>
-              <div>
+              </AnimatedCard>
+              <AnimatedCard>
                 <Label htmlFor="contactInfo.email">Email de contacto</Label>
                 <Input
                   id="contactInfo.email"
@@ -528,38 +609,60 @@ export default function CreateStoreForm() {
                   onChange={handleInputChange}
                   // NOTA: Validar formato de email requiere más lógica o usar validación nativa del input type email
                 />
-              </div>
+              </AnimatedCard>
             </div>
           </FormSection>
 
           <Divider sx={{ my: 4 }} />
 
           {/* Sección: Horarios */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
             <SectionTitle variant="h5">Horarios</SectionTitle>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Configura los horarios de atención de tu tienda.
             </Typography>
 
-            <Card variant="outlined" sx={{ mb: 3 }}>
+            <Card 
+              variant="outlined" 
+              sx={{ 
+                mb: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                }
+              }}
+            >
               <CardContent>
                 <div className="flex items-center space-x-2 mb-4">
                   <Checkbox
                     id="useGeneralSchedule"
                     checked={formData.schedule.useGeneralSchedule}
                     onCheckedChange={(checked) => handleGeneralScheduleToggle(typeof checked === 'boolean' ? checked : false)}
+                    className="transition-transform hover:scale-110"
                   />
-                  <Label htmlFor="useGeneralSchedule">Usar horario general para todos los días</Label>
+                  <Label htmlFor="useGeneralSchedule" className="text-lg">Usar horario general para todos los días</Label>
                 </div>
 
                 {formData.schedule.useGeneralSchedule ? (
-                  <div>
-                    <Label htmlFor="generalSchedule">Horario General</Label>
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Label htmlFor="generalSchedule" className="text-lg">Horario General</Label>
                     <Select 
                       onValueChange={(value) => handleScheduleChange('generalSchedule', value)} 
                       value={formData.schedule.generalSchedule}
                     >
-                      <SelectTrigger id="generalSchedule">
+                      <SelectTrigger 
+                        id="generalSchedule"
+                        className="mt-2 transition-all hover:border-primary"
+                      >
                         <SelectValue placeholder="Selecciona un horario" />
                       </SelectTrigger>
                       <SelectContent>
@@ -569,9 +672,14 @@ export default function CreateStoreForm() {
                         <SelectItem value="Cerrado">Cerrado</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <motion.div 
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
                     {[
                       { key: 'monday', label: 'Lunes' },
                       { key: 'tuesday', label: 'Martes' },
@@ -580,14 +688,23 @@ export default function CreateStoreForm() {
                       { key: 'friday', label: 'Viernes' },
                       { key: 'saturday', label: 'Sábado' },
                       { key: 'sunday', label: 'Domingo' }
-                    ].map(({ key, label }) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <Label htmlFor={`schedule.${key}`} className="w-24">{label}</Label>
+                    ].map(({ key, label }, index) => (
+                      <motion.div
+                        key={key}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <Label htmlFor={`schedule.${key}`} className="w-24 font-medium">{label}</Label>
                         <Select 
                           onValueChange={(value) => handleScheduleChange(key as Exclude<keyof StoreFormData['schedule'], 'useGeneralSchedule' | 'generalSchedule'>, value)} 
                           value={formData.schedule[key as Exclude<keyof StoreFormData['schedule'], 'useGeneralSchedule' | 'generalSchedule'>]}
                         >
-                          <SelectTrigger id={`schedule.${key}`}>
+                          <SelectTrigger 
+                            id={`schedule.${key}`}
+                            className="transition-all hover:border-primary"
+                          >
                             <SelectValue placeholder="Selecciona un horario" />
                           </SelectTrigger>
                           <SelectContent>
@@ -597,9 +714,9 @@ export default function CreateStoreForm() {
                             <SelectItem value="Cerrado">Cerrado</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
+                      </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
               </CardContent>
             </Card>
@@ -608,21 +725,25 @@ export default function CreateStoreForm() {
           <Divider sx={{ my: 4 }} />
 
           {/* Sección: Características */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+          >
             <SectionTitle variant="h5">Características</SectionTitle>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {Object.keys(formData.features).map(feature => {
                 const featureKey = feature as keyof StoreFormData['features'];
                 const featureLabel = featureKey.replace(/([A-Z])/g, ' $1').trim().replace(/^(.)/, (match) => match.toUpperCase());
                 return (
-                  <div key={featureKey} className="flex items-center space-x-2">
+                  <AnimatedCard key={featureKey} className="flex items-center space-x-2">
                     <Checkbox
                       id={`features.${featureKey}`}
                       checked={formData.features[featureKey]}
                       onCheckedChange={(checked) => handleCheckboxChange(featureKey, typeof checked === 'boolean' ? checked : false)}
                     />
                     <Label htmlFor={`features.${featureKey}`}>{featureLabel}</Label>
-                  </div>
+                  </AnimatedCard>
                 );
               })}
             </div>
@@ -631,47 +752,47 @@ export default function CreateStoreForm() {
           <Divider sx={{ my: 4 }} />
 
           {/* Sección: Preguntas Frecuentes */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.7 }}
+          >
             <SectionTitle variant="h5">Preguntas Frecuentes</SectionTitle>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Edita las preguntas predefinidas. Campos marcados con <span className="text-red-500">*</span> son obligatorios.
             </Typography>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {formData.faqs.map((faq, index) => (
-                <div key={index} className="col-span-1">
-                  <Card variant="outlined">
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor={`faqs.${index}.question`}>Pregunta <span className="text-red-500">*</span></Label>
-                          <Input
-                            id={`faqs.${index}.question`}
-                            name={`faqs.${index}.question`}
-                            value={faq.question}
-                            onChange={(e) => handleFAQChange(index, 'question', e.target.value)}
-                            required
-                            maxLength={100}
-                            className={!!validationErrors.faqs?.[index]?.question ? "border-red-500" : ""}
-                          />
-                           {validationErrors.faqs?.[index]?.question && <p className="text-red-500 text-sm mt-1">{validationErrors.faqs[index].question}</p>}
-                        </div>
-                        <div>
-                          <Label htmlFor={`faqs.${index}.answer`}>Respuesta <span className="text-red-500">*</span></Label>
-                          <Textarea
-                            id={`faqs.${index}.answer`}
-                            name={`faqs.${index}.answer`}
-                            value={faq.answer}
-                            onChange={(e) => handleFAQChange(index, 'answer', e.target.value)}
-                            required
-                            maxLength={500}
-                            className={!!validationErrors.faqs?.[index]?.answer ? "border-red-500" : ""}
-                          />
-                            {validationErrors.faqs?.[index]?.answer && <p className="text-red-500 text-sm mt-1">{validationErrors.faqs[index].answer}</p>}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                <AnimatedCard key={index} className="col-span-1">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor={`faqs.${index}.question`}>Pregunta <span className="text-red-500">*</span></Label>
+                      <Input
+                        id={`faqs.${index}.question`}
+                        name={`faqs.${index}.question`}
+                        value={faq.question}
+                        onChange={(e) => handleFAQChange(index, 'question', e.target.value)}
+                        required
+                        maxLength={100}
+                        className={!!validationErrors.faqs?.[index]?.question ? "border-red-500" : ""}
+                      />
+                       {validationErrors.faqs?.[index]?.question && <p className="text-red-500 text-sm mt-1">{validationErrors.faqs[index].question}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor={`faqs.${index}.answer`}>Respuesta <span className="text-red-500">*</span></Label>
+                      <Textarea
+                        id={`faqs.${index}.answer`}
+                        name={`faqs.${index}.answer`}
+                        value={faq.answer}
+                        onChange={(e) => handleFAQChange(index, 'answer', e.target.value)}
+                        required
+                        maxLength={500}
+                        className={!!validationErrors.faqs?.[index]?.answer ? "border-red-500" : ""}
+                      />
+                        {validationErrors.faqs?.[index]?.answer && <p className="text-red-500 text-sm mt-1">{validationErrors.faqs[index].answer}</p>}
+                    </div>
+                  </div>
+                </AnimatedCard>
               ))}
             </div>
           </FormSection>
@@ -679,7 +800,11 @@ export default function CreateStoreForm() {
           <Divider sx={{ my: 4 }} />
 
           {/* Sección: Descripción */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.8 }}
+          >
             <SectionTitle variant="h5">Descripción</SectionTitle>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Breve descripción de tu local (máx. 500 caracteres).
@@ -701,7 +826,11 @@ export default function CreateStoreForm() {
           <Divider sx={{ my: 4 }} />
 
           {/* Sección: Términos y Condiciones */}
-          <FormSection>
+          <FormSection
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.9 }}
+          >
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="termsAccepted"
@@ -716,13 +845,30 @@ export default function CreateStoreForm() {
              {validationErrors.termsAccepted && <p className="text-red-500 text-sm mt-1">{validationErrors.termsAccepted}</p>}
           </FormSection>
 
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-            <Button type="submit" disabled={loading} size="lg">
-              {loading ? "Creando..." : "Crear tienda"}
+          <motion.div 
+            className="mt-8 flex justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Button 
+              type="submit" 
+              disabled={loading}
+              size="lg"
+              className="px-8 py-6 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creando...</span>
+                </div>
+              ) : (
+                "Crear tienda"
+              )}
             </Button>
-          </Box>
+          </motion.div>
         </StyledPaper>
-      </form>
+      </motion.form>
     </Container>
   );
 } 
