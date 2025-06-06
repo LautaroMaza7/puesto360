@@ -1,6 +1,6 @@
 "use client"
 
-import { AdminRoute } from '@/components/admin/AdminRoute'
+import AdminRoute from '@/components/admin/AdminRoute'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import Providers from '@/app/providers'
