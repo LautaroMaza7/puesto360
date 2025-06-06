@@ -1,5 +1,5 @@
 "use client";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, collection } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
@@ -34,7 +34,7 @@ interface Props {
 }
 
 export default function AddToCartBtn({ data }: Props) {
-  const { user, isAuthenticated } = useAuth0();
+  const { isSignedIn, user } = useUser();
   const [quantity, setQuantity] = useState(0);
   const [localCartCount, setLocalCartCount] = useState(getLocalCart().reduce((acc, item) => acc + item.quantity, 0));
   const { toast } = useToast();
@@ -130,8 +130,8 @@ export default function AddToCartBtn({ data }: Props) {
       } : undefined,
     };
 
-    if (isAuthenticated && user?.sub) {
-      const userId = user.sub;
+    if (isSignedIn && user) {
+      const userId = user.id;
       const cartDocRef = doc(collection(db, "carts"), userId);
       const snapshot = await getDoc(cartDocRef);
       let updatedItems = [];
@@ -289,6 +289,11 @@ export default function AddToCartBtn({ data }: Props) {
             (activePromo.precioFinal - (Math.max(0, quantity - activePromo.cantidad) * data.price))
           )}
         </div>
+      )}
+      {!isSignedIn && (
+        <p className="text-sm text-red-500 mt-2">
+          Debes iniciar sesión para agregar productos al carrito
+        </p>
       )}
     </div>
   );

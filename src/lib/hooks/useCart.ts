@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { db } from "@/lib/firebase";
 import { collection, doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 
 interface CartItem {
   id?: string;
@@ -30,7 +30,7 @@ interface CartData {
 }
 
 export function useCart() {
-  const { user, isAuthenticated } = useAuth0();
+  const { isSignedIn, user } = useUser();
   const [cart, setCartState] = useState<CartData>({ items: [] });
   const [loading, setLoading] = useState(true);
 
@@ -56,14 +56,14 @@ export function useCart() {
 
     window.addEventListener("cartUpdate", handleCartUpdate);
     return () => window.removeEventListener("cartUpdate", handleCartUpdate);
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
     const fetchCart = async () => {
       setLoading(true);
 
       // Si NO está logueado, usamos localStorage
-      if (!isAuthenticated || !user?.sub) {
+      if (!isSignedIn || !user?.id) {
         // console.warn("Usuario no autenticado: cargando carrito local...");
         setCartState({ items: getLocalCart() });
         setLoading(false);
@@ -71,7 +71,7 @@ export function useCart() {
       }
 
       // Usuario logueado: conectar a Firestore
-      const userId = user.sub;
+      const userId = user.id;
       const cartDocRef = doc(collection(db, "carts"), userId);
 
       const unsubscribe = onSnapshot(
@@ -135,7 +135,7 @@ export function useCart() {
     };
 
     fetchCart();
-  }, [user, isAuthenticated]);
+  }, [isSignedIn, user?.id]);
 
   const totalQuantity = cart?.items.reduce(
     (acc, item) => acc + item.quantity,

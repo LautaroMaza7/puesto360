@@ -26,6 +26,7 @@ import { Product } from '@/types/product';
 import { useRouter } from 'next/navigation';
 import { ProductImage } from '@/components/ui/ProductImage'
 import { signIn, signOut, useSession } from "next-auth/react";
+import { UserButton, useUser, SignInButton } from "@clerk/nextjs";
 
 const data: NavMenu = [
   {
@@ -343,8 +344,7 @@ const SearchModal = ({
 };
 
 const TopNavbar = () => {
-  const { data: session, status } = useSession();
-  // console.log("SESSION EN NAVBAR:", session, status);
+  const { isSignedIn, user } = useUser();
   const { cart, loading: cartLoading, totalQuantity } = useCart();
   const [localCartCount, setLocalCartCount] = useState(
     getLocalCart().reduce((acc, item) => acc + item.quantity, 0)
@@ -449,7 +449,7 @@ const TopNavbar = () => {
     }
   };
 
-  const totalItems = session ? totalQuantity : localCartCount;
+  const totalItems = isSignedIn ? totalQuantity : localCartCount;
 
   return (
     <nav className="sticky top-0 bg-white z-20 border-b border-black/10">
@@ -581,76 +581,14 @@ const TopNavbar = () => {
             <CartBtn totalItems={totalItems} />
           )}
 
-          {session ? (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-1 p-1 group rounded-full hover:scale-105 transition-transform focus:outline-none">
-                  {session.user?.image ? (
-                    <Image
-                      src={session.user.image}
-                      alt={session.user.name || "avatar"}
-                      width={36}
-                      height={36}
-                      className="rounded-full border border-black/10 group-hover:ring-2 group-hover:ring-black/10 transition-all"
-                    />
-                  ) : (
-                    <span className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-black font-bold text-lg">
-                      {session.user?.name
-                        ? session.user.name.split(" ").map(n => n[0]).join("").toUpperCase()
-                        : "U"}
-                    </span>
-                  )}
-                  <ChevronDown className="text-black/60 w-4 h-4 group-hover:rotate-180 transition-transform" />
-                </button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  sideOffset={8}
-                  className="z-40 w-48 rounded-lg bg-white shadow-lg border border-black/10 p-1 text-sm"
-                >
-                  <DropdownMenu.Item asChild>
-                    <Link
-                      href="/account"
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-black/5 rounded-md transition-colors duration-150"
-                    >
-                      <User className="w-4 h-4" />
-                      Mi cuenta
-                    </Link>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item asChild>
-                    <Link
-                      href="/orders"
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-black/5 rounded-md transition-colors duration-150"
-                    >
-                      <Image src="/icons/orders.svg" alt="orders" width={20} height={20} />
-                      Mis Pedidos
-                    </Link>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator className="h-px my-1 bg-black/10" />
-                  <DropdownMenu.Item
-                    onSelect={() => signOut()}
-                    className="flex items-center gap-2 px-3 py-2 hover:bg-black/5 rounded-md cursor-pointer text-black/80 transition-colors duration-150"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Cerrar sesión
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+          {isSignedIn ? (
+            <UserButton afterSignOutUrl="/" />
           ) : (
-            <button
-              onClick={() => signIn("auth0")}
-              className="p-1 rounded-full hover:scale-105 transition-transform"
-            >
-              <Image
-                priority
-                src="/icons/user.svg"
-                height={24}
-                width={24}
-                alt="user"
-                className="max-w-[22px] max-h-[22px] text-black/60"
-              />
-            </button>
+            <SignInButton mode="modal">
+              <button className="text-sm font-medium text-gray-700 hover:text-gray-800">
+                Iniciar sesión
+              </button>
+            </SignInButton>
           )}
         </div>
       </div>
