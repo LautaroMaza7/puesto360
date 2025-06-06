@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useUser } from "@clerk/nextjs";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from '@/lib/firebase'
 import Link from "next/link";
@@ -43,48 +43,42 @@ interface Order {
 }
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { isSignedIn, user } = useUser();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!isAuthenticated || !user?.email) {
+      if (!isSignedIn || !user?.primaryEmailAddress?.emailAddress) {
         setLoading(false);
         return;
       }
 
       try {
         const orderRef = doc(db, "orders", params.id);
-        const orderSnap = await getDoc(orderRef);
-        
-        if (orderSnap.exists()) {
-          const orderData = { id: orderSnap.id, ...orderSnap.data() } as Order;
-          
-          // Verify that the order belongs to the current user
-          if (orderData.userId !== user.email) {
-            setError("No tienes permiso para ver este pedido");
-            setLoading(false);
-            return;
+        const orderDoc = await getDoc(orderRef);
+
+        if (orderDoc.exists()) {
+          const orderData = orderDoc.data() as Order;
+          // Verificar que el pedido pertenece al usuario actual
+          if (orderData.userId === user.primaryEmailAddress.emailAddress) {
+            setOrder(orderData);
+          } else {
+            console.error("No tienes permiso para ver este pedido");
           }
-          
-          setOrder(orderData);
-        } else {
-          setError("Pedido no encontrado");
         }
       } catch (error) {
-        console.error("Error al obtener el pedido:", error);
-        setError("Ocurrió un error al cargar el pedido");
+        console.error("Error fetching order:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [isAuthenticated, user, params.id]);
+  }, [isSignedIn, user, params.id]);
 
-  if (isLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
@@ -92,7 +86,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isSignedIn) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-bold mb-4">Acceso restringido</h1>

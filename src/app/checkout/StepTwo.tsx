@@ -1,7 +1,7 @@
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { Step2Data } from "./schema";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import {
   collection,
   getDocs,
@@ -31,7 +31,6 @@ import clsx from "clsx";
 import { satoshi } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import DeliveryAddressInput from "@/components/checkout/DeliveryAddressInput";
-import { useUser } from "@clerk/nextjs";
 
 interface SavedAddress extends Step2Data {
   id: string;
@@ -152,7 +151,6 @@ const StepTwo = ({
   setStep,
 }: StepTwoProps) => {
   const { isSignedIn, user } = useUser();
-  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
