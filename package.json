@@ -17,9 +17,12 @@
   },
   "dependencies": {
     "@clerk/nextjs": "4.29.7",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@headlessui/react": "^2.2.1",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
+    "@mui/material": "^7.1.1",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-avatar": "^1.1.7",
