@@ -57,15 +57,15 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="es" className={cn(satoshi.variable)}>
-        <body className={cn("min-h-screen bg-white antialiased")}>
+    <html lang="es" className={cn(satoshi.variable)}>
+      <body className={cn("min-h-screen bg-white antialiased")}>
           <UserInitializer />
-          <Providers>
-            <RootLayoutClient>{children}</RootLayoutClient>
-          </Providers>
+        <Providers>
+          <RootLayoutClient>{children}</RootLayoutClient>
+        </Providers>
           <Toaster />
-        </body>
-      </html>
+      </body>
+    </html>
     </ClerkProvider>
   );
 }

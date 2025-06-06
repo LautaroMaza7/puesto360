@@ -174,21 +174,21 @@ export default function ShopPage() {
               <SelectItem value="10000-999999">Más de $10,000</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+          </div>
 
         <div className="flex justify-end mb-8">
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
+                    </SelectTrigger>
+                    <SelectContent>
               <SelectItem value="newest">Más recientes</SelectItem>
               <SelectItem value="price-asc">Menor precio</SelectItem>
               <SelectItem value="price-desc">Mayor precio</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
       {products.length === 0 ? (
         <div className="text-center py-12">

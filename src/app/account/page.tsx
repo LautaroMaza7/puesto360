@@ -24,7 +24,7 @@ export default function AccountPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <p>Email: {user?.emailAddresses[0]?.emailAddress}</p>
         <p>Nombre: {user?.firstName} {user?.lastName}</p>
-      </div>
-    </div>
+                        </div>
+                      </div>
   );
 } 
