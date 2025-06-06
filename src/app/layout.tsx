@@ -66,6 +66,7 @@ export default function RootLayout({
           colorInputText: '#000000',
         },
       }}
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
       <html lang="es" className={cn(satoshi.variable)}>
         <body className={cn("min-h-screen bg-white antialiased")}>

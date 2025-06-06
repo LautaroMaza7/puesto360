@@ -11,12 +11,14 @@ export default authMiddleware({
     "/product/:path*",
     "/category/:path*",
     "/sign-in",
-    "/sign-up"
+    "/sign-up",
+    "/api/auth(.*)"
   ],
   ignoredRoutes: [
     "/api/webhook",
     "/api/products",
-    "/api/categories"
+    "/api/categories",
+    "/api/auth(.*)"
   ]
 });
 
