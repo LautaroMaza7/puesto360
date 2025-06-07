@@ -16,15 +16,16 @@ import ProductCard from "./ProductCard";
 import { Product } from "@/types/product";
 import Link from "next/link";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
+import { Button } from "@/components/ui/button";
 
 type ProductListSecProps = {
   title: string;
-  data: Product[];
-  viewAllLink?: string;
+  products: Product[];
+  viewAllLink: string;
   showDiscountBadge?: boolean;
 };
 
-const ProductListSec = ({ title, data, viewAllLink, showDiscountBadge }: ProductListSecProps) => {
+const ProductListSec = ({ title, products, viewAllLink, showDiscountBadge }: ProductListSecProps) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
@@ -93,7 +94,7 @@ const ProductListSec = ({ title, data, viewAllLink, showDiscountBadge }: Product
   };
 
   // Filtrar solo productos activos y ordenar por fecha de creación
-  const activeProducts = data
+  const activeProducts = products
     .filter(product => product.active === true)
     .sort((a, b) => {
       const timestampA = getTimestamp(a.createdAt);
@@ -163,16 +164,11 @@ const ProductListSec = ({ title, data, viewAllLink, showDiscountBadge }: Product
             ))}
           </CarouselContent>
         </Carousel>
-        {viewAllLink && (
-          <div className="w-full px-4 sm:px-0 text-center">
-            <Link
-              href={viewAllLink}
-              className="w-full inline-block sm:w-[218px] px-[54px] py-4 border rounded-full hover:bg-black hover:text-white text-black transition-all font-medium text-sm sm:text-base border-black/10"
-            >
-              Ver todos
-            </Link>
-          </div>
-        )}
+        <div className="flex items-center justify-between mt-8">
+          <Button variant="ghost" asChild>
+            <Link href={viewAllLink}>Ver todo</Link>
+          </Button>
+        </div>
       </motion.div>
     </section>
   );

@@ -6,13 +6,11 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import AgeVerificationModal from "@/components/common/AgeVerificationModal";
-import ProductGrid from "@/components/shop-page/ProductGrid";
+import ProductListSec from "@/components/common/ProductListSec";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/homepage/Header";
 import Brands from "@/components/homepage/Brands";
 import DressStyle from "@/components/homepage/DressStyle";
-import Reviews from "@/components/homepage/Reviews";
-import { reviewsData } from "@/lib/data/reviews";
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -132,7 +130,7 @@ export default function Home() {
       <Header />
       <Brands />
       <main className="my-[50px] sm:my-[72px]">
-        <ProductGrid
+        <ProductListSec
           title="NUEVOS INGRESOS"
           products={products.filter(p => p.newArrival)}
           viewAllLink="/shop#new-arrivals"
@@ -141,7 +139,7 @@ export default function Home() {
           <hr className="h-[1px] border-t-black/10 my-10 sm:my-16" />
         </div>
         <div className="mb-[50px] sm:mb-20">
-          <ProductGrid
+          <ProductListSec
             title="PRODUCTOS DESTACADOS"
             products={products.filter(p => p.featuredBrand)}
             viewAllLink="/shop#featured"
@@ -151,13 +149,12 @@ export default function Home() {
           <DressStyle />
         </div>
         <div className="mb-[50px] sm:mb-20">
-          <ProductGrid
+          <ProductListSec
             title="OFERTAS ESPECIALES"
             products={products.filter(p => p.specialOffer)}
             viewAllLink="/shop#special-offers"
           />
         </div>
-        <Reviews data={reviewsData} />
       </main>
     </>
   );
