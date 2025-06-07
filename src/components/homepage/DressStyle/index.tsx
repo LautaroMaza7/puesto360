@@ -28,12 +28,12 @@ const DressStyle = () => {
           className="flex flex-col sm:flex-row md:h-[289px] space-y-4 sm:space-y-0 sm:space-x-5 mb-4 sm:mb-5"
         >
           <DressStyleCard
-            title="Casual"
+            title="Remeras"
             url="/shop#casual"
             className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/dress-style-1.png')]"
           />
           <DressStyleCard
-            title="Formal"
+            title="Hombres"
             url="/shop#formal"
             className="md:max-w-[684px] h-[190px] bg-[url('/images/dress-style-2.png')]"
           />
@@ -46,12 +46,12 @@ const DressStyle = () => {
           className="flex flex-col sm:flex-row md:h-[289px] space-y-5 sm:space-y-0 sm:space-x-5"
         >
           <DressStyleCard
-            title="Party"
+            title="Mujeres"
             url="/shop#party"
             className="md:max-w-[684px] h-[190px] bg-[url('/images/dress-style-3.png')]"
           />
           <DressStyleCard
-            title="Gym"
+            title="Deportivo"
             url="/shop#gym"
             className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/dress-style-4.png')]"
           />

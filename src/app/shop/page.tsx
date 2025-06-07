@@ -137,7 +137,6 @@ function ShopContent() {
           <div className="flex-1">
             <div className="flex flex-col lg:flex-row lg:justify-between mb-6">
               <div className="flex items-center justify-between">
-                <h1 className="font-bold text-2xl md:text-[32px]">Bebidas</h1>
                 <MobileFilters />
               </div>
               <div className="flex flex-col sm:items-center sm:flex-row mt-4 lg:mt-0">

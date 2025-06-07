@@ -39,71 +39,71 @@ import { Button } from "@/components/ui/button";
 const data: NavMenu = [
   {
     id: 1,
-    label: "Tienda",
+    label: "Categorías",
     type: "MenuList",
     children: [
       {
         id: 10,
-        label: "Todos",
+        label: "Todos los Productos",
         url: "/shop",
-        description: "Explora toda nuestra selección de bebidas.",
+        description: "Explora toda nuestra selección de productos textiles.",
       },
       {
         id: 11,
-        label: "Whisky",
-        url: "/shop?subcategory=whisky",
-        description: "Una selección de los mejores whiskies premium.",
+        label: "Ropa de Mujer",
+        url: "/shop?subcategory=mujer",
+        description: "Moda femenina para todas las ocasiones.",
       },
       {
         id: 12,
-        label: "Vodka",
-        url: "/shop?subcategory=vodka",
-        description: "Descubre nuestra variedad de vodkas premium.",
+        label: "Ropa de Hombre",
+        url: "/shop?subcategory=hombre",
+        description: "Estilos modernos para caballero.",
       },
       {
         id: 13,
-        label: "Gin",
-        url: "/shop?subcategory=gin",
-        description: "Explora nuestra selección de gins artesanales.",
+        label: "Ropa Infantil",
+        url: "/shop?subcategory=infantil",
+        description: "Ropa cómoda y divertida para los más pequeños.",
       },
       {
         id: 14,
-        label: "Ron",
-        url: "/shop?subcategory=ron",
-        description: "Los mejores rones para todos los gustos.",
+        label: "Accesorios",
+        url: "/shop?subcategory=accesorios",
+        description: "Complementos para completar tu look.",
       },
       {
         id: 15,
-        label: "Licores",
-        url: "/shop?subcategory=licores",
-        description: "Una amplia variedad de licores y destilados.",
+        label: "Calzado",
+        url: "/shop?subcategory=calzado",
+        description: "Zapatos y zapatillas para toda la familia.",
       },
       {
         id: 16,
-        label: "Combos",
-        url: "/shop?subcategory=combos",
-        description: "Combos especiales con las mejores bebidas.",
+        label: "Bolsos y Carteras",
+        url: "/shop?subcategory=bolsos",
+        description: "Accesorios para llevar tus pertenencias con estilo.",
       },
     ],
   },
   {
     id: 2,
     type: "MenuItem",
-    label: "Ofertas Especiales",
+    label: "Ofertas",
     url: "/shop?filter=specialOffer",
     children: [],
   },
   {
     id: 3,
     type: "MenuItem",
-    label: "Nuevas Llegadas",
+    label: "Nuevas Colecciones",
     url: "/shop?filter=newArrival",
     children: [],
   },
   {
     id: 4,
     type: "MenuItem",
-    label: "Marcas Destacadas",
+    label: "Marcas",
     url: "/shop?filter=featuredBrand",
     children: [],
   },
@@ -201,7 +201,7 @@ const SearchModal = ({
                     name="search"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar bebidas, categorías, marcas..."
+                    placeholder="Buscar productos, categorías, marcas..."
                     className="bg-transparent placeholder:text-black/40"
                     autoComplete="off"
                     disabled={isNavigating}
@@ -530,7 +530,7 @@ const TopNavbar = () => {
                 setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
-              placeholder="Buscar bebidas, categorías, marcas..."
+              placeholder="Buscar productos, categorías, marcas..."
               className="bg-transparent placeholder:text-black/40"
             />
           </InputGroup>
