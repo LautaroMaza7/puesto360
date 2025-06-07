@@ -325,16 +325,12 @@ export default function CartPage() {
               <Button
                 type="button"
                 onClick={() => {
-                  if (!isSignedIn) {
-                    router.push("/sign-in");
-                    return;
-                  }
                   localStorage.setItem("checkout_cart", JSON.stringify(cart.items));
                   router.push("/checkout");
                 }}
                 className="text-sm font-medium bg-black rounded-full w-full h-12 group shadow-lg hover:bg-gray-800 transition-all"
               >
-                {isSignedIn ? "Ir a Pagar" : "Iniciar Sesión para Pagar"}
+                Ir a Pagar
                 <FaArrowRight className="text-base ml-2 group-hover:translate-x-1 transition-all" />
               </Button>
             </motion.div>

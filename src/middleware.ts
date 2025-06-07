@@ -4,6 +4,7 @@ export default authMiddleware({
   // Rutas públicas que no requieren autenticación
   publicRoutes: [
     "/",
+    "/cart",
     "/shop",
     "/api/webhook",
     "/api/products",
