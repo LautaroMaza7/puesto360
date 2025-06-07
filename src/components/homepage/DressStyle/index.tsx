@@ -18,7 +18,7 @@ const DressStyle = () => {
             "text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12",
           ])}
         >
-          EXPLORA POR CATEGORÍA DE BEBIDAS
+          EXPLORA POR CATEGORÍA
         </motion.h2>
         <motion.div
           initial={{ y: "100px", opacity: 0 }}
@@ -28,14 +28,14 @@ const DressStyle = () => {
           className="flex flex-col sm:flex-row md:h-[289px] space-y-4 sm:space-y-0 sm:space-x-5 mb-4 sm:mb-5"
         >
           <DressStyleCard
-            title="Whisky"
-            url="/shop?subcategory=whisky"
-            className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/whisky.jpg')]"
+            title="Casual"
+            url="/shop#casual"
+            className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/dress-style-1.png')]"
           />
           <DressStyleCard
-            title="Licores"
-            url="/shop?subcategory=licores"
-            className="text-white md:max-w-[684px] h-[190px] bg-[url('/images/licores.jpg')]"
+            title="Formal"
+            url="/shop#formal"
+            className="md:max-w-[684px] h-[190px] bg-[url('/images/dress-style-2.png')]"
           />
         </motion.div>
         <motion.div
@@ -46,14 +46,14 @@ const DressStyle = () => {
           className="flex flex-col sm:flex-row md:h-[289px] space-y-5 sm:space-y-0 sm:space-x-5"
         >
           <DressStyleCard
-            title="Gin"
-            url="/shop?subcategory=gin"
-            className="md:max-w-[684px] h-[190px] bg-[url('/images/gin.jpg')]"
+            title="Party"
+            url="/shop#party"
+            className="md:max-w-[684px] h-[190px] bg-[url('/images/dress-style-3.png')]"
           />
           <DressStyleCard
-            title="Vodka"
-            url="/shop?subcategory=vodka"
-            className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/vodka.jpg')]"
+            title="Gym"
+            url="/shop#gym"
+            className="md:max-w-[260px] lg:max-w-[360px] xl:max-w-[407px] h-[190px] bg-[url('/images/dress-style-4.png')]"
           />
         </motion.div>
       </section>
