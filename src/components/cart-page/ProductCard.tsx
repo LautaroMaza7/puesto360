@@ -72,8 +72,18 @@ const ProductCard = ({ data }: ProductCardProps) => {
       return;
     }
 
-    const userId = user.id;
-    const cartRef = doc(db, "carts", userId);
+    // Obtener el email del usuario desde Firestore
+    const userDocRef = doc(db, "users", user.id);
+    const userSnap = await getDoc(userDocRef);
+    
+    if (!userSnap.exists()) {
+      console.error('Usuario no encontrado en Firestore');
+      return;
+    }
+
+    const userData = userSnap.data();
+    const userEmail = userData.email;
+    const cartRef = doc(db, "carts", userEmail);
     const cartSnap = await getDoc(cartRef);
     if (!cartSnap.exists()) return;
 

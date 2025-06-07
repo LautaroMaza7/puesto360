@@ -75,11 +75,23 @@ export function useCart() {
           return;
         }
 
-        // Usuario logueado: conectar a Firestore usando el ID de Clerk
-        const userId = user.id;
-        console.log('Buscando carrito para usuario:', userId);
-        const cartDocRef = doc(collection(db, "carts"), userId);
+        // Obtener el email del usuario desde Firestore
+        const userDocRef = doc(db, "users", user.id);
+        const userSnap = await getDoc(userDocRef);
+        
+        if (!userSnap.exists()) {
+          console.error('Usuario no encontrado en Firestore');
+          setError("Error: Usuario no encontrado");
+          setLoading(false);
+          return;
+        }
 
+        const userData = userSnap.data();
+        const userEmail = userData.email;
+        console.log('Buscando carrito para usuario:', userEmail);
+
+        // Usar el email para buscar el carrito
+        const cartDocRef = doc(collection(db, "carts"), userEmail);
         const unsubscribe = onSnapshot(
           cartDocRef,
           async (snapshot) => {
