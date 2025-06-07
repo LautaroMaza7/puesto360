@@ -26,13 +26,24 @@ export default function CartPage() {
   const [showAllItems, setShowAllItems] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Debug logs
   useEffect(() => {
-    if (!isSignedIn) {
-      router.push("/sign-in");
-    }
-  }, [isSignedIn, router]);
+    console.log('Estado de autenticación:', {
+      isSignedIn,
+      userEmail: user?.primaryEmailAddress?.emailAddress
+    });
+  }, [isSignedIn, user]);
 
-  // Detectar si es dispositivo móvil
+  useEffect(() => {
+    console.log('Estado del carrito:', {
+      loading,
+      error,
+      cartItems: cart?.items,
+      cartSource: isSignedIn ? 'Firestore' : 'Local Storage',
+      totalItems: cart?.items?.length || 0
+    });
+  }, [cart, loading, error, isSignedIn]);
+
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -88,10 +99,6 @@ export default function CartPage() {
     });
   };
 
-  if (!isSignedIn) {
-    return null;
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -112,7 +119,7 @@ export default function CartPage() {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!loading && (!cart || cart.items.length === 0)) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -318,12 +325,16 @@ export default function CartPage() {
               <Button
                 type="button"
                 onClick={() => {
+                  if (!isSignedIn) {
+                    router.push("/sign-in");
+                    return;
+                  }
                   localStorage.setItem("checkout_cart", JSON.stringify(cart.items));
                   router.push("/checkout");
                 }}
                 className="text-sm font-medium bg-black rounded-full w-full h-12 group shadow-lg hover:bg-gray-800 transition-all"
               >
-                Ir a Pagar
+                {isSignedIn ? "Ir a Pagar" : "Iniciar Sesión para Pagar"}
                 <FaArrowRight className="text-base ml-2 group-hover:translate-x-1 transition-all" />
               </Button>
             </motion.div>
