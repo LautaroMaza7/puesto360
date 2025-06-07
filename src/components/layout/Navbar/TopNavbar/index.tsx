@@ -494,10 +494,17 @@ const TopNavbar = () => {
             href="/"
             className={cn([
               integralCF.className,
-              "text-2xl lg:text-[32px] mb-1 mr-3 lg:mr-10 text-black",
+              "flex items-center gap-2 text-2xl lg:text-[32px] mb-1 mr-3 lg:mr-10 text-black",
             ])}
           >
-             Puesto360
+            <Image
+              src="/images/logo.jpg"
+              alt="Puesto360 Logo"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+            Puesto<span className="text-orange-500">360</span>
           </Link>
         </div>
 
