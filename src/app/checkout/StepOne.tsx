@@ -1,13 +1,12 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import {
   collection,
   getDocs,
   setDoc,
   doc,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "@/lib/firebase";
@@ -24,7 +23,6 @@ import {
 import clsx from "clsx";
 import { satoshi } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
-import { useUser } from "@clerk/nextjs";
 
 interface SavedProfile extends Step1Data {
   id: string;
@@ -126,13 +124,13 @@ const StepOne = ({
   onNext,
 }: StepOneProps) => {
   const { isSignedIn, user } = useUser();
-  const router = useRouter();
   const [savedProfiles, setSavedProfiles] = useState<SavedProfile[]>([]);
   const [showSavedInfo, setShowSavedInfo] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [userData, setUserData] = useState<any>(null);
 
   const {
     register,
@@ -143,109 +141,60 @@ const StepOne = ({
     trigger,
   } = useFormContext<Step1Data>();
 
-  const fullName = watch("fullName");
-  const phone = watch("phone");
   const dni = watch("dni");
 
-  // Obtener datos guardados
+  // Obtener datos del usuario desde Firestore
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user || !user.primaryEmailAddress?.emailAddress) return;
+      if (!isSignedIn || !user?.id) return;
 
-      setValue("email", user.primaryEmailAddress.emailAddress);
-
-      const profilesCollection = collection(
-        db,
-        "users",
-        user.primaryEmailAddress.emailAddress,
-        "profiles"
-      );
-      const profilesSnapshot = await getDocs(profilesCollection);
-
-      const profiles: SavedProfile[] = [];
-      profilesSnapshot.forEach((doc) => {
-        profiles.push({
-          ...(doc.data() as Step1Data),
-          id: doc.id,
-        });
-      });
-
-      setSavedProfiles(profiles);
-
-      // Si hay perfiles guardados, seleccionar automáticamente el favorito o el último creado
-      if (profiles.length > 0) {
-        // Buscar el perfil favorito
-        const favoriteProfile = profiles.find((p) => p.isFavorite);
-
-        // Si hay un favorito, usarlo; si no, usar el último creado
-        const profileToSelect =
-          favoriteProfile || profiles[profiles.length - 1];
-        setSelectedValue(profileToSelect.id);
-
-        // Establecemos los valores del formulario en segundo plano
-        setValue("fullName", profileToSelect.fullName);
-        setValue("phone", profileToSelect.phone);
-        setValue("dni", profileToSelect.dni);
-
-        // No activamos showSavedInfo para que los datos no se muestren automáticamente
-        setUseSaved(true);
+      try {
+        const userDocRef = doc(db, "users", user.id);
+        const userSnap = await getDoc(userDocRef);
+        
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setUserData(data);
+          
+          // Establecer valores del formulario con datos de Clerk
+          setValue("email", user.emailAddresses[0].emailAddress);
+          setValue("fullName", `${user.firstName} ${user.lastName}`);
+          setValue("phone", user.phoneNumbers[0]?.phoneNumber || "");
+          setValue("dni", data.dni || "");
+        } else {
+          // Si no existe el documento, crear uno nuevo con datos de Clerk
+          const newUserData = {
+            email: user.emailAddresses[0].emailAddress,
+            name: `${user.firstName} ${user.lastName}`,
+            phone: user.phoneNumbers[0]?.phoneNumber || "",
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(userDocRef, newUserData);
+          setUserData(newUserData);
+          
+          // Establecer valores del formulario
+          setValue("email", newUserData.email);
+          setValue("fullName", newUserData.name);
+          setValue("phone", newUserData.phone);
+        }
+      } catch (error) {
+        console.error('Error cargando datos del usuario:', error);
       }
     };
 
     fetchUserData();
-  }, [user, setValue, setUseSaved]);
-
-  // Cargar datos guardados en el formulario
-  useEffect(() => {
-    if (!useSaved) {
-      setValue("fullName", "");
-      setValue("phone", "");
-      setValue("dni", "");
-      setShowSavedInfo(false);
-      setIsEditing(false);
-      setSelectedValue("");
-    }
-  }, [useSaved, setValue]);
-
-  // Seleccionar info guardada
-  const handleSavedInfoSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedValue(value);
-
-    if (value) {
-      const selectedProfile = savedProfiles.find(
-        (profile) => profile.id === value
-      );
-      if (selectedProfile) {
-        setShowSavedInfo(true);
-        setIsEditing(false);
-        setValue("fullName", selectedProfile.fullName);
-        setValue("phone", selectedProfile.phone);
-        setValue("dni", selectedProfile.dni);
-      }
-    } else {
-      setShowSavedInfo(false);
-      setIsEditing(false);
-      setValue("fullName", "");
-      setValue("phone", "");
-      setValue("dni", "");
-    }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  }, [isSignedIn, user, setValue]);
 
   const handleNext = async () => {
-    if (!user?.primaryEmailAddress?.emailAddress) {
+    if (!isSignedIn || !user?.id) {
       setErrorMessage("Debes iniciar sesión para continuar");
       return;
     }
 
-    // Validar todos los campos requeridos
+    // Validar el DNI
     const isFormValid = await trigger();
     if (!isFormValid) {
-      setErrorMessage("Por favor, completa todos los campos correctamente.");
+      setErrorMessage("Por favor, ingresa un DNI válido.");
       return;
     }
 
@@ -253,89 +202,22 @@ const StepOne = ({
     setErrorMessage(null);
 
     try {
-      const newData = {
-        fullName,
-        phone,
+      const userDocRef = doc(db, "users", user.id);
+      await updateDoc(userDocRef, {
         dni,
-        email: user.primaryEmailAddress.emailAddress,
-        createdAt: new Date().toISOString(),
-      };
+        updatedAt: new Date().toISOString()
+      });
 
-      const userProfilesCollection = collection(
-        db,
-        "users",
-        user.primaryEmailAddress.emailAddress,
-        "profiles"
-      );
-
-      // Si estamos editando un perfil existente
-      if (selectedValue && isEditing) {
-        const profileRef = doc(userProfilesCollection, selectedValue);
-        await updateDoc(profileRef, newData);
-        setSavedProfiles((prev) =>
-          prev.map((profile) =>
-            profile.id === selectedValue ? { ...profile, ...newData } : profile
-          )
-        );
-      }
-      // Si estamos creando un nuevo perfil o no estamos usando datos guardados
-      else if (!useSaved || !selectedValue) {
-        const newId = uuidv4();
-        const profileRef = doc(userProfilesCollection, newId);
-        await setDoc(profileRef, newData);
-
-        // Actualizar el estado local con el nuevo perfil
-        const newProfile = { ...newData, id: newId };
-        setSavedProfiles((prev) => [...prev, newProfile]);
-
-        // Actualizar el estado para mostrar el nuevo perfil
-        setSelectedValue(newId);
-        setUseSaved(true);
-        setShowSavedInfo(true);
-      }
-
-      // Continuar al siguiente paso
       onNext();
     } catch (error) {
-      console.error("Error al guardar el perfil:", error);
+      console.error("Error al guardar el DNI:", error);
       setErrorMessage(
-        "Ocurrió un error al guardar el perfil. Por favor, intenta nuevamente."
+        "Ocurrió un error al guardar el DNI. Por favor, intenta nuevamente."
       );
     } finally {
       setIsSaving(false);
     }
   };
-
-  // Validación en tiempo real
-  useEffect(() => {
-    const subscription = watch((value, { name, type }) => {
-      if (name && type === "change") {
-        trigger(name as keyof Step1Data);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, trigger]);
-
-  const options = [
-    {
-      id: "saved",
-      title: "Usar información guardada",
-      description: "Selecciona uno de tus perfiles guardados",
-      icon: UserIcon,
-    },
-    {
-      id: "new",
-      title: "Ingresar nueva información",
-      description: "Completa el formulario con tus datos",
-      icon: DocumentTextIcon,
-    },
-  ];
-
-  useEffect(() => {
-    if (!isSignedIn) {
-      router.push("/sign-in");
-    }
-  }, [isSignedIn, router]);
 
   if (!isSignedIn) {
     return null;
@@ -347,12 +229,7 @@ const StepOne = ({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-8"
     >
-      <h2
-        className={cn([
-          satoshi.className,
-          "text-3xl font-bold text-center mb-6",
-        ])}
-      >
+      <h2 className={cn([satoshi.className, "text-3xl font-bold text-center mb-6"])}>
         Información personal
       </h2>
 
@@ -399,290 +276,33 @@ const StepOne = ({
         )}
       </AnimatePresence>
 
-      {savedProfiles.length > 0 && (
-        <RadioGroup
-          value={useSaved}
-          onChange={(value) => {
-            setUseSaved(value);
-            if (!value) {
-              setShowSavedInfo(false);
-              setIsEditing(false);
-              setSelectedValue("");
-            }
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DisplayField
+          label="Nombre completo"
+          value={watch("fullName")}
+        />
+        <DisplayField
+          label="Correo electrónico"
+          value={watch("email")}
+        />
+        <DisplayField
+          label="Teléfono"
+          value={watch("phone")}
+        />
+        <InputField
+          id="dni"
+          label="DNI"
+          register={register}
+          errors={errors}
+          validation={{
+            required: true,
+            pattern: {
+              value: /^[0-9]{8}$/,
+              message: "Ingresa un DNI válido (8 dígitos)",
+            },
           }}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {options.map((option) => {
-              const Icon = option.icon;
-              const isSelected = option.id === "saved" ? useSaved : !useSaved;
-
-              return (
-                <RadioGroup.Option
-                  key={option.id}
-                  value={option.id === "saved"}
-                  className={({ active }) =>
-                    clsx(
-                      "relative rounded-2xl shadow-sm px-6 py-4 cursor-pointer flex items-start space-x-4",
-                      "transition-all duration-200 ease-in-out",
-                      "border-2",
-                      isSelected
-                        ? "border-gray-900 bg-gray-50"
-                        : "border-gray-200",
-                      active && !isSelected && "border-gray-300 bg-gray-50"
-                    )
-                  }
-                >
-                  {({ checked }) => (
-                    <>
-                      <div
-                        className={clsx(
-                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                          isSelected
-                            ? "bg-gray-900 text-white"
-                            : "bg-gray-100 text-gray-500"
-                        )}
-                      >
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <RadioGroup.Label
-                          className={clsx(
-                            "block text-sm font-medium leading-6",
-                            isSelected ? "text-gray-900" : "text-gray-900"
-                          )}
-                        >
-                          {option.title}
-                        </RadioGroup.Label>
-                        <RadioGroup.Description className="mt-1 text-sm text-gray-500">
-                          {option.description}
-                        </RadioGroup.Description>
-                      </div>
-                      <div
-                        className={clsx(
-                          "shrink-0 rounded-full border-2 h-5 w-5 flex items-center justify-center",
-                          isSelected
-                            ? "border-gray-900 bg-gray-900"
-                            : "border-gray-300"
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="w-2 h-2 rounded-full bg-white" />
-                        )}
-                      </div>
-                    </>
-                  )}
-                </RadioGroup.Option>
-              );
-            })}
-          </div>
-        </RadioGroup>
-      )}
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={useSaved ? "saved" : "new"}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="space-y-6"
-        >
-          {useSaved && savedProfiles.length > 0 ? (
-            <>
-              <div className="flex flex-col">
-                <label
-                  htmlFor="savedInfo"
-                  className="text-sm font-medium text-gray-700 mb-2"
-                >
-                  Seleccionar información guardada
-                </label>
-                <select
-                  id="savedInfo"
-                  value={selectedValue}
-                  onChange={handleSavedInfoSelect}
-                  className="w-full px-4 py-3 text-base border rounded-xl shadow-sm
-                    transition-all duration-200 ease-in-out
-                    border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-200
-                    bg-white hover:bg-gray-50"
-                >
-                  <option value="">Seleccionar...</option>
-                  {savedProfiles.map((profile) => (
-                    <option key={profile.id} value={profile.id}>
-                      {profile.fullName}
-                    </option>
-                  ))}
-                </select>
-                {showSavedInfo && (
-                  <p className="text-sm text-gray-900 mt-2">
-                    Perfil seleccionado. Puedes continuar o editar los datos si
-                    lo deseas.
-                  </p>
-                )}
-              </div>
-
-              <AnimatePresence>
-                {showSavedInfo && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  >
-                    {isEditing ? (
-                      <>
-                        <InputField
-                          id="fullName"
-                          label="Nombre completo"
-                          register={register}
-                          errors={errors}
-                          disabled={!isEditing && showSavedInfo}
-                          validation={{
-                            required: true,
-                            minLength: {
-                              value: 3,
-                              message:
-                                "El nombre debe tener al menos 3 caracteres",
-                            },
-                          }}
-                        />
-                        <InputField
-                          id="email"
-                          label="Correo electrónico"
-                          register={register}
-                          errors={errors}
-                          disabled={!isEditing && showSavedInfo}
-                          validation={{
-                            required: true,
-                            pattern: {
-                              value:
-                                /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
-                              message: "Ingresa un correo electrónico válido",
-                            },
-                          }}
-                        />
-                        <InputField
-                          id="phone"
-                          label="Teléfono"
-                          register={register}
-                          errors={errors}
-                          disabled={!isEditing && showSavedInfo}
-                          validation={{
-                            required: true,
-                            pattern: {
-                              value: /^[0-9]{10}$/,
-                              message:
-                                "Ingresa un número de teléfono válido (10 dígitos)",
-                            },
-                          }}
-                        />
-                        <InputField
-                          id="dni"
-                          label="DNI"
-                          register={register}
-                          errors={errors}
-                          disabled={!isEditing && showSavedInfo}
-                          validation={{
-                            required: true,
-                            pattern: {
-                              value: /^[0-9]{8}$/,
-                              message: "Ingresa un DNI válido (8 dígitos)",
-                            },
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <DisplayField
-                          label="Nombre completo"
-                          value={watch("fullName")}
-                          onEdit={handleEdit}
-                        />
-                        <DisplayField
-                          label="Correo electrónico"
-                          value={watch("email")}
-                        />
-                        <DisplayField
-                          label="Teléfono"
-                          value={watch("phone")}
-                          onEdit={handleEdit}
-                        />
-                        <DisplayField
-                          label="DNI"
-                          value={watch("dni")}
-                          onEdit={handleEdit}
-                        />
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            >
-              <InputField
-                id="fullName"
-                label="Nombre completo"
-                register={register}
-                errors={errors}
-                disabled={!isEditing && showSavedInfo}
-                validation={{
-                  required: true,
-                  minLength: {
-                    value: 3,
-                    message: "El nombre debe tener al menos 3 caracteres",
-                  },
-                }}
-              />
-              <InputField
-                id="email"
-                label="Correo electrónico"
-                register={register}
-                errors={errors}
-                disabled={!isEditing && showSavedInfo}
-                validation={{
-                  required: true,
-                  pattern: {
-                    value: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
-                    message: "Ingresa un correo electrónico válido",
-                  },
-                }}
-              />
-              <InputField
-                id="phone"
-                label="Teléfono"
-                register={register}
-                errors={errors}
-                disabled={!isEditing && showSavedInfo}
-                validation={{
-                  required: true,
-                  pattern: {
-                    value: /^[0-9]{10}$/,
-                    message:
-                      "Ingresa un número de teléfono válido (10 dígitos)",
-                  },
-                }}
-              />
-              <InputField
-                id="dni"
-                label="DNI"
-                register={register}
-                errors={errors}
-                disabled={!isEditing && showSavedInfo}
-                validation={{
-                  required: true,
-                  pattern: {
-                    value: /^[0-9]{8}$/,
-                    message: "Ingresa un DNI válido (8 dígitos)",
-                  },
-                }}
-              />
-            </motion.div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+        />
+      </div>
 
       <div className="fixed z-10 bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-end items-center">
@@ -696,22 +316,16 @@ const StepOne = ({
               "text-white rounded-full w-full max-w-[200px] h-[48px]",
               "transition-all duration-200 ease-in-out",
               "hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
-              selectedValue ? "bg-gray-900 hover:bg-gray-800" : "bg-black"
+              "bg-black"
             )}
           >
-            {isSaving
-              ? "Guardando..."
-              : selectedValue
-              ? "Continuar"
-              : "Continuar"}
+            {isSaving ? "Guardando..." : "Continuar"}
           </motion.button>
         </div>
       </div>
     </motion.div>
   );
 };
-
-/* hola */
 
 export default StepOne;
 
