@@ -16,9 +16,6 @@ export interface Store {
     phone: string;
     address: string;
   };
-  settings: {
-    shippingEnabled: boolean;
-  };
   totalProducts: number;
   totalSales: number;
   rating: number;

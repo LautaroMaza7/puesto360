@@ -165,12 +165,6 @@ export default function StorePage() {
                     <p className="text-sm text-gray-500">Estado</p>
                     <p className="text-gray-900 capitalize">{store.status}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Envíos</p>
-                    <p className="text-gray-900">
-                      {store.settings.shippingEnabled ? "Habilitados" : "Deshabilitados"}
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
