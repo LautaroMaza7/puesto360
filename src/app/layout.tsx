@@ -12,26 +12,26 @@ import UserInitializer from "@/components/auth/UserInitializer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TUCS.DRINKS",
-  description: "Descubre bebidas que elevan tu experiencia",
-  keywords: ["bebidas", "alcohol", "licores", "vinos", "cervezas"],
-  authors: [{ name: "TucsDrinks" }],
-  creator: "TucsDrinks",
-  publisher: "TucsDrinks",
+  title: "Puesto360",
+  description: "Plataforma integral para la gestión de comercios textiles",
+  keywords: ["textil", "comercio", "gestión", "administración", "negocios", "retail"],
+  authors: [{ name: "Puesto360" }],
+  creator: "Puesto360",
+  publisher: "Puesto360",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://tucsdrinks.com'),
+  metadataBase: new URL('https://puesto360.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: "TUCS.DRINKS",
-    description: "Descubre bebidas que elevan tu experiencia",
-    url: "https://tucs.drinks",
-    siteName: "TUCS.DRINKS",
+    title: "Puesto360",
+    description: "Plataforma integral para la gestión de comercios textiles",
+    url: "https://puesto360.com",
+    siteName: "Puesto360",
     images: [
       {
         url: "/images/og-image.jpg",
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "TucsDrinks | Bebidas y Licores Premium",
-    description: "Descubre nuestra exclusiva selección de bebidas y licores premium. Envíos a domicilio, ofertas especiales y la mejor experiencia en bebidas alcohólicas.",
+    title: "Puesto360 | Gestión de Comercios Textiles",
+    description: "Optimiza tu negocio textil con nuestra plataforma integral de gestión. Administración eficiente, control de inventario y más.",
     images: ['/og-image.jpg'],
   },
 };

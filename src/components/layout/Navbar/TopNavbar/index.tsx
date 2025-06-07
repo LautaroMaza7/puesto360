@@ -497,7 +497,7 @@ const TopNavbar = () => {
               "text-2xl lg:text-[32px] mb-1 mr-3 lg:mr-10 text-black",
             ])}
           >
-            TUCS.DRINKS
+             Puesto360
           </Link>
         </div>
 

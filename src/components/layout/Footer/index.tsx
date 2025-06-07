@@ -69,10 +69,10 @@ const Footer = () => {
                   "text-3xl font-bold text-center mb-6",
                 ])}
               >
-                TUCS.DRINKS
+                Puesto360
               </h2>
               <p className="text-black/60 text-sm mb-9">
-                Ofrecemos una amplia selección de bebidas alcohólicas de muchas marcas, perfectas para cualquier ocasión.
+                Plataforma líder para la gestión y administración de comercios textiles. Optimiza tu negocio con nuestras soluciones integrales.
               </p>
               <div className="flex items-center">
                 {socialsData.map((social) => (
@@ -97,12 +97,12 @@ const Footer = () => {
           <hr className="h-[1px] border-t-black/10 mb-6" />
           <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center mb-2">
             <p className="text-sm text-center sm:text-left text-black/60 mb-4 sm:mb-0 sm:mr-1">
-              TUCS.DRINKS © Desarrollado por 
+              Puesto360 © Desarrollado por 
               <Link
-                href="https://tucsdigital.com/"
+                href="https://porftolio-mocha.vercel.app/"
                 className="text-black font-medium"
               >
-                TUCS DIGITAL
+                Lautaro Maza
               </Link>
               {/* {", "}
               Diseñado por
