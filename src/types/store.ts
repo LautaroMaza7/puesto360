@@ -1,33 +1,27 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Store {
   id: string;
   name: string;
   description: string;
-  logo: string;
-  banner: string;
+  logo?: string;
+  banner?: string;
   ownerId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  status: 'active' | 'inactive' | 'suspended';
-  categories: string[];
-  rating: number;
-  totalSales: number;
-  totalProducts: number;
+  status: "active" | "inactive" | "suspended";
+  address: string;
+  city: string;
+  phone: string;
   contactInfo: {
     email: string;
-    phone?: string;
-    address?: string;
-    socialMedia?: {
-      facebook?: string;
-      instagram?: string;
-      twitter?: string;
-    };
+    phone: string;
+    address: string;
   };
   settings: {
     shippingEnabled: boolean;
-    customShippingRates?: {
-      [key: string]: number;
-    };
-    returnPolicy?: string;
-    termsAndConditions?: string;
   };
+  totalProducts: number;
+  totalSales: number;
+  rating: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 } 
