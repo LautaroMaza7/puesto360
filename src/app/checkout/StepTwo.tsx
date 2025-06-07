@@ -31,6 +31,13 @@ import clsx from "clsx";
 import { satoshi } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
 import DeliveryAddressInput from "@/components/checkout/DeliveryAddressInput";
+import { useCart } from "@/lib/hooks/useCart";
+import { CartItem } from "@/lib/features/carts/cartsSlice";
+
+interface CartData {
+  items: CartItem[];
+  total: number;
+}
 
 interface SavedAddress extends Step2Data {
   id: string;
@@ -151,6 +158,7 @@ const StepTwo = ({
   setStep,
 }: StepTwoProps) => {
   const { isSignedIn, user } = useUser();
+  const { cart } = useCart();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -163,6 +171,7 @@ const StepTwo = ({
   const [selectedStore, setSelectedStore] = useState<any>(null);
   const [deliveryType, setDeliveryType] = useState<"envio" | "retiro" | null>(null);
   const [isValidAddress, setIsValidAddress] = useState(false);
+  const [currentStore, setCurrentStore] = useState<any>(null);
 
   const {
     watch,
@@ -236,26 +245,56 @@ const StepTwo = ({
     loadAddresses();
   }, [user?.primaryEmailAddress?.emailAddress, setValue]);
 
-  // Cargar sucursales
+  // Cargar información de la tienda y sus sucursales
   useEffect(() => {
-    const loadStoreLocations = async () => {
+    const loadStoreInfo = async () => {
+      if (!cart || !cart.items || cart.items.length === 0) {
+        setErrorMessage("No hay productos en el carrito");
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const settingsRef = doc(db, "settings", "general");
-        const settingsDoc = await getDoc(settingsRef);
-        if (settingsDoc.exists()) {
-          const settings = settingsDoc.data();
-          const locations = settings.locations || [];
-          setStoreLocations(locations);
+        // Obtener el ID de la tienda del primer producto del carrito
+        const firstItem = cart.items[0] as CartItem & { storeId?: string };
+        const storeId = firstItem.storeId;
+        if (!storeId) {
+          setErrorMessage("No se pudo identificar la tienda del producto");
+          setIsLoading(false);
+          return;
         }
+
+        // Obtener la información de la tienda
+        const storeRef = doc(db, "stores", storeId);
+        const storeDoc = await getDoc(storeRef);
+        
+        if (!storeDoc.exists()) {
+          setErrorMessage("No se encontró la información de la tienda");
+          setIsLoading(false);
+          return;
+        }
+
+        const storeData = storeDoc.data();
+        setCurrentStore(storeData);
+
+        // Verificar si la tienda tiene sucursales
+        if (!storeData.locations || storeData.locations.length === 0) {
+          setErrorMessage("Esta tienda no tiene sucursales disponibles para retiro");
+          setIsLoading(false);
+          return;
+        }
+
+        setStoreLocations(storeData.locations);
       } catch (error) {
-        console.error("Error al cargar sucursales:", error);
+        console.error("Error al cargar información de la tienda:", error);
+        setErrorMessage("Error al cargar la información de la tienda");
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadStoreLocations();
-  }, []);
+    loadStoreInfo();
+  }, [cart]);
 
   const handleAddressSelect = (data: {
     direccion: string;
@@ -548,11 +587,13 @@ const StepTwo = ({
             {deliveryOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = option.id === deliveryType;
+              const isRetiroDisabled = option.id === "retiro" && (!currentStore || !currentStore.locations || currentStore.locations.length === 0);
 
               return (
                 <RadioGroup.Option
                   key={option.id}
                   value={option.id}
+                  disabled={isRetiroDisabled}
                   className={({ active }) =>
                     clsx(
                       "relative rounded-2xl shadow-sm px-6 py-4 cursor-pointer flex items-start space-x-4",
@@ -562,7 +603,8 @@ const StepTwo = ({
                       isSelected
                         ? "border-gray-900 bg-gray-50"
                         : "border-gray-200",
-                      active && !isSelected && "border-gray-300 bg-gray-50"
+                      active && !isSelected && "border-gray-300 bg-gray-50",
+                      isRetiroDisabled && "opacity-50 cursor-not-allowed"
                     )
                   }
                 >
@@ -589,6 +631,11 @@ const StepTwo = ({
                       <RadioGroup.Description className="mt-1 text-sm text-gray-500">
                         {option.description}
                       </RadioGroup.Description>
+                      {isRetiroDisabled && (
+                        <p className="mt-1 text-sm text-red-500">
+                          Esta tienda no tiene sucursales disponibles para retiro
+                        </p>
+                      )}
                     </div>
                     <div
                       className={clsx(
@@ -612,6 +659,10 @@ const StepTwo = ({
         <>
           {deliveryType === "retiro" ? (
             <div className="space-y-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-medium mb-2">Tienda: {currentStore?.name}</h3>
+                <p className="text-sm text-gray-600">{currentStore?.description}</p>
+              </div>
               <h3 className="text-lg font-medium">Selecciona una sucursal</h3>
               <div className="grid grid-cols-1 gap-4">
                 {isLoading ? (
