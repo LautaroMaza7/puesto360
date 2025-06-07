@@ -504,7 +504,7 @@ const TopNavbar = () => {
               height={40}
               className=""
             />
-            Puesto<span className="text-orange-500">360</span>
+            Puesto<span className="text-[rgb(246,190,103)]">360</span>
           </Link>
         </div>
 
