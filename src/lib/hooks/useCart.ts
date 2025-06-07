@@ -75,8 +75,9 @@ export function useCart() {
           return;
         }
 
-        // Usuario logueado: conectar a Firestore
+        // Usuario logueado: conectar a Firestore usando el ID de Clerk
         const userId = user.id;
+        console.log('Buscando carrito para usuario:', userId);
         const cartDocRef = doc(collection(db, "carts"), userId);
 
         const unsubscribe = onSnapshot(
@@ -87,6 +88,7 @@ export function useCart() {
               let parsedLocal: CartItem[] = localCart;
 
               if (snapshot.exists()) {
+                console.log('Carrito encontrado en Firestore:', snapshot.data());
                 const firestoreCart = snapshot.data() as CartData;
                 const validatedItems = firestoreCart.items.map((item, index) => ({
                   ...item,
@@ -119,6 +121,7 @@ export function useCart() {
                   }
                 }
               } else {
+                console.log('No se encontró carrito en Firestore, usando carrito local');
                 // Si no existe carrito en Firestore, usar el local
                 if (parsedLocal.length > 0) {
                   console.log("Creando carrito nuevo en Firestore con datos locales");

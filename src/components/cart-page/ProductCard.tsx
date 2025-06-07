@@ -67,12 +67,12 @@ const ProductCard = ({ data }: ProductCardProps) => {
   });
 
   const updateCart = async (updatedItem: CartItem, action: "add" | "remove" | "delete") => {
-    if (!isSignedIn || !user?.primaryEmailAddress?.emailAddress) {
+    if (!isSignedIn || !user?.id) {
       updateLocalCart(updatedItem, action);
       return;
     }
 
-    const userId = user.primaryEmailAddress.emailAddress;
+    const userId = user.id;
     const cartRef = doc(db, "carts", userId);
     const cartSnap = await getDoc(cartRef);
     if (!cartSnap.exists()) return;
