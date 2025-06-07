@@ -18,14 +18,13 @@ import Link from "next/link";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
 
-type ProductListSecProps = {
+interface ProductListSecProps {
   title: string;
   products: Product[];
   viewAllLink: string;
-  showDiscountBadge?: boolean;
-};
+}
 
-const ProductListSec = ({ title, products, viewAllLink, showDiscountBadge }: ProductListSecProps) => {
+export default function ProductListSec({ title, products, viewAllLink }: ProductListSecProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
@@ -155,10 +154,10 @@ const ProductListSec = ({ title, products, viewAllLink, showDiscountBadge }: Pro
                 className="w-full max-w-[198px] sm:max-w-[295px] pl-0"
               >
                 <ProductCard 
-                  data={product} 
+                  product={product} 
                   variant="carousel"
                   showNewBadge={true}
-                  showDiscountBadge={showDiscountBadge}
+                  showDiscountBadge={true}
                 />
               </CarouselItem>
             ))}
@@ -172,6 +171,4 @@ const ProductListSec = ({ title, products, viewAllLink, showDiscountBadge }: Pro
       </motion.div>
     </section>
   );
-};
-
-export default ProductListSec;
+}

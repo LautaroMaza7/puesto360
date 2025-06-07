@@ -17,14 +17,14 @@ import { PLACEHOLDER_IMAGE } from '@/lib/constants'
 import { doc, collection, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-type ProductCardProps = {
-  data: Product;
-  variant?: 'shop' | 'carousel';
+interface ProductCardProps {
+  product: Product;
+  variant?: "shop" | "carousel";
   showNewBadge?: boolean;
   showDiscountBadge?: boolean;
-};
+}
 
-const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDiscountBadge = false }: ProductCardProps) => {
+const ProductCard = ({ product, variant = "shop", showNewBadge = false, showDiscountBadge = false }: ProductCardProps) => {
   const { user, isSignedIn } = useUser();
   const { cart } = useCart();
   const { toast } = useToast();
@@ -35,16 +35,16 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
     shop: 'h-[350px] sm:h-[460px] lg:h-[430px]'
   };
 
-  const priceAfterDiscount = data.discount.percentage > 0 
-    ? data.price - (data.price * data.discount.percentage / 100)
-    : data.discount.amount > 0 
-    ? data.price - data.discount.amount 
-    : data.price;
+  const priceAfterDiscount = product.discount.percentage > 0 
+    ? product.price - (product.price * product.discount.percentage / 100)
+    : product.discount.amount > 0 
+    ? product.price - product.discount.amount 
+    : product.price;
 
-  const isNew = showNewBadge && data.newArrival;
+  const isNew = showNewBadge && product.newArrival;
   
-  const productSlug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const productUrl = `/shop/product/${data.id}/${productSlug}`;
+  const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const productUrl = `/shop/product/${product.id}/${productSlug}`;
 
   /* hola */
 
@@ -62,22 +62,22 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
         <Link href={productUrl} className="block">
           <div className={`relative ${variant === 'shop' ? 'w-[120px]' : 'w-[180px]'} h-[170px] sm:w-full ${variant === 'shop' ? 'sm:h-[250px]' : 'sm:h-[280px]'} rounded-lg overflow-hidden`}>
             <ProductImage
-              src={data.srcUrl || PLACEHOLDER_IMAGE}
-              alt={data.name}
+              src={product.srcUrl || PLACEHOLDER_IMAGE}
+              alt={product.name}
               className="w-full h-full object-contain hover:scale-110 transition-all duration-500"
               width={295}
               height={298}
               variant={variant}
             />
-            {showDiscountBadge && (data.discount.percentage > 0 || data.discount.amount > 0) && (
+            {showDiscountBadge && (product.discount.percentage > 0 || product.discount.amount > 0) && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute top-2 left-2 bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-0.5 rounded-full"
               >
-                {data.discount.percentage > 0 
-                  ? `-${data.discount.percentage}%`
-                  : `-${formatPrice(data.discount.amount)}`}
+                {product.discount.percentage > 0 
+                  ? `-${product.discount.percentage}%`
+                  : `-${formatPrice(product.discount.amount)}`}
               </motion.div>
             )}
             {isNew && (
@@ -87,7 +87,7 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
             )}
           </div>
           <h3 className="text-sm sm:text-base font-medium text-gray-900 mt-10 sm:mt-2 line-clamp-2 min-h-[2.5rem]">
-            {data.name}
+            {product.name}
           </h3>
         </Link>
 
@@ -97,19 +97,19 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
             <div className="space-y-1">
               <div className="flex items-center gap-1">
                 <Rating
-                  initialValue={data.rating}
+                  initialValue={product.rating}
                   readonly
                   size={14}
                   allowFraction
                   SVGclassName="inline-block"
                   emptyClassName="fill-gray-200"
                 />
-                <span className="text-xs sm:text-sm text-gray-500">{data.rating.toFixed(1)}</span>
+                <span className="text-xs sm:text-sm text-gray-500">{product.rating.toFixed(1)}</span>
               </div>
               <div className="flex flex-col">
-                {(data.discount.percentage > 0 || data.discount.amount > 0) && (
+                {(product.discount.percentage > 0 || product.discount.amount > 0) && (
                   <span className="text-xs sm:text-sm text-gray-400 line-through mb-0.5">
-                    {formatPrice(data.price)}
+                    {formatPrice(product.price)}
                   </span>
                 )}
                 <span className="text-sm sm:text-base font-semibold text-gray-900">
@@ -117,23 +117,23 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                 </span>
               </div>
             </div>
-            {cart?.items?.find((item) => item.id === data.id) ? (
+            {cart?.items?.find((item) => item.id === product.id) ? (
               <div className="flex items-center bg-gray-50 rounded-full -ml-[35px] -mb-[10px]">
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const cartItem = {
-                      id: data.id,
-                      name: data.name,
-                      price: data.price,
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
                       quantity: -1,
-                      totalPrice: data.price,
-                      srcUrl: data.srcUrl,
-                      image: data.images?.[0] || data.srcUrl || PLACEHOLDER_IMAGE,
-                      discount: data.discount || { percentage: 0, amount: 0 },
-                      slug: data.name.split(" ").join("-"),
-                      productId: data.id,
+                      totalPrice: product.price,
+                      srcUrl: product.srcUrl,
+                      image: product.images?.[0] || product.srcUrl || PLACEHOLDER_IMAGE,
+                      discount: product.discount || { percentage: 0, amount: 0 },
+                      slug: product.name.split(" ").join("-"),
+                      productId: product.id,
                     };
 
                     if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
@@ -152,13 +152,13 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                               existingItems.splice(index, 1);
                               toast({
                                 title: "¡Producto eliminado del carrito!",
-                                description: `${data.name} ha sido eliminado del carrito.`,
+                                description: `${product.name} ha sido eliminado del carrito.`,
                                 variant: "destructive"
                               });
                             } else {
                               toast({
                                 title: "¡Cantidad actualizada!",
-                                description: `Se ha actualizado la cantidad de ${data.name} en el carrito.`,
+                                description: `Se ha actualizado la cantidad de ${product.name} en el carrito.`,
                                 variant: "cart"
                               });
                             }
@@ -178,13 +178,13 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                           localCart.splice(index, 1);
                           toast({
                             title: "¡Producto eliminado del carrito!",
-                            description: `${data.name} ha sido eliminado del carrito.`,
+                            description: `${product.name} ha sido eliminado del carrito.`,
                             variant: "destructive"
                           });
                         } else {
                           toast({
                             title: "¡Cantidad actualizada!",
-                            description: `Se ha actualizado la cantidad de ${data.name} en el carrito.`,
+                            description: `Se ha actualizado la cantidad de ${product.name} en el carrito.`,
                             variant: "cart"
                           });
                         }
@@ -200,23 +200,23 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                   -
                 </Button>
                 <span className="text-sm sm:text-base font-medium text-gray-800 w-5 sm:w-6 text-center">
-                  {cart.items.find((item) => item.id === data.id)?.quantity || 0}
+                  {cart.items.find((item) => item.id === product.id)?.quantity || 0}
                 </span>
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     const cartItem = {
-                      id: data.id,
-                      name: data.name,
-                      price: data.price,
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
                       quantity: 1,
-                      totalPrice: data.price,
-                      srcUrl: data.srcUrl,
-                      image: data.images?.[0] || data.srcUrl || PLACEHOLDER_IMAGE,
-                      discount: data.discount || { percentage: 0, amount: 0 },
-                      slug: data.name.split(" ").join("-"),
-                      productId: data.id,
+                      totalPrice: product.price,
+                      srcUrl: product.srcUrl,
+                      image: product.images?.[0] || product.srcUrl || PLACEHOLDER_IMAGE,
+                      discount: product.discount || { percentage: 0, amount: 0 },
+                      slug: product.name.split(" ").join("-"),
+                      productId: product.id,
                     };
 
                     if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
@@ -233,14 +233,14 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                             existingItems[index].totalPrice = existingItems[index].quantity * cartItem.price;
                             toast({
                               title: "¡Cantidad actualizada!",
-                              description: `Se ha actualizado la cantidad de ${data.name} en el carrito.`,
+                              description: `Se ha actualizado la cantidad de ${product.name} en el carrito.`,
                               variant: "cart"
                             });
                           } else {
                             existingItems.push(cartItem);
                             toast({
                               title: "¡Producto agregado al carrito!",
-                              description: `${data.name} ha sido agregado correctamente al carrito.`,
+                              description: `${product.name} ha sido agregado correctamente al carrito.`,
                               variant: "cart"
                             });
                           }
@@ -250,7 +250,7 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                           setDoc(cartRef, { items: [cartItem] });
                           toast({
                             title: "¡Producto agregado al carrito!",
-                            description: `${data.name} ha sido agregado correctamente al carrito.`,
+                            description: `${product.name} ha sido agregado correctamente al carrito.`,
                             variant: "cart"
                           });
                         }
@@ -264,14 +264,14 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                         localCart[index].totalPrice = localCart[index].quantity * cartItem.price;
                         toast({
                           title: "¡Cantidad actualizada!",
-                          description: `Se ha actualizado la cantidad de ${data.name} en el carrito.`,
+                          description: `Se ha actualizado la cantidad de ${product.name} en el carrito.`,
                           variant: "cart"
                         });
                       } else {
                         localCart.push(cartItem);
                         toast({
                           title: "¡Producto agregado al carrito!",
-                          description: `${data.name} ha sido agregado correctamente al carrito.`,
+                          description: `${product.name} ha sido agregado correctamente al carrito.`,
                           variant: "cart"
                         });
                       }
@@ -292,16 +292,16 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                   e.preventDefault();
                   e.stopPropagation();
                   const cartItem = {
-                    id: data.id,
-                    name: data.name,
-                    price: data.price,
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
                     quantity: 1,
-                    totalPrice: data.price,
-                    srcUrl: data.srcUrl,
-                    image: data.images?.[0] || data.srcUrl || PLACEHOLDER_IMAGE,
-                    discount: data.discount || { percentage: 0, amount: 0 },
-                    slug: data.name.split(" ").join("-"),
-                    productId: data.id,
+                    totalPrice: product.price,
+                    srcUrl: product.srcUrl,
+                    image: product.images?.[0] || product.srcUrl || PLACEHOLDER_IMAGE,
+                    discount: product.discount || { percentage: 0, amount: 0 },
+                    slug: product.name.split(" ").join("-"),
+                    productId: product.id,
                   };
 
                   if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
@@ -318,14 +318,14 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                           existingItems[index].totalPrice = existingItems[index].quantity * cartItem.price;
                           toast({
                             title: "¡Cantidad actualizada!",
-                            description: `Se ha actualizado la cantidad de ${data.name} en el carrito.`,
+                            description: `Se ha actualizado la cantidad de ${product.name} en el carrito.`,
                             variant: "cart"
                           });
                         } else {
                           existingItems.push(cartItem);
                           toast({
                             title: "¡Producto agregado al carrito!",
-                            description: `${data.name} ha sido agregado correctamente al carrito.`,
+                            description: `${product.name} ha sido agregado correctamente al carrito.`,
                             variant: "cart"
                           });
                         }
@@ -335,7 +335,7 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                         setDoc(cartRef, { items: [cartItem] });
                         toast({
                           title: "¡Producto agregado al carrito!",
-                          description: `${data.name} ha sido agregado correctamente al carrito.`,
+                          description: `${product.name} ha sido agregado correctamente al carrito.`,
                           variant: "cart"
                         });
                       }
@@ -349,14 +349,14 @@ const ProductCard = ({ data, variant = 'carousel', showNewBadge = false, showDis
                       localCart[index].totalPrice = localCart[index].quantity * cartItem.price;
                       toast({
                         title: "¡Cantidad actualizada!",
-                        description: `Se ha actualizado la cantidad de ${data.name} en el carrito.`,
+                        description: `Se ha actualizado la cantidad de ${product.name} en el carrito.`,
                         variant: "cart"
                       });
                     } else {
                       localCart.push(cartItem);
                       toast({
                         title: "¡Producto agregado al carrito!",
-                        description: `${data.name} ha sido agregado correctamente al carrito.`,
+                        description: `${product.name} ha sido agregado correctamente al carrito.`,
                         variant: "cart"
                       });
                     }

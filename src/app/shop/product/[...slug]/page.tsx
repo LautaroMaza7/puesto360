@@ -56,7 +56,8 @@ export default async function ProductPage({
         <div className="mb-[50px] sm:mb-20">
           <ProductListSec
             title="También te puede gustar"
-            data={relatedProducts}
+            products={relatedProducts}
+            viewAllLink="/shop"
           />
         </div>
       </main>
