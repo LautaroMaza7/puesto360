@@ -5,8 +5,6 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-
-// Importar componentes de Shadcn UI necesarios
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Paper, Container, Typography, Box, Divider, Card, CardContent } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Store, Phone, Mail, Clock, Info, CheckCircle2 } from "lucide-react";
 
-// Definir la estructura de datos del formulario
 interface StoreFormData {
   basicData: {
     localName: string;
@@ -28,8 +24,8 @@ interface StoreFormData {
   };
   contactInfo: {
     whatsapp: string;
-    phoneNumber?: string; // Opcional
-    email?: string; // Opcional
+    phoneNumber?: string;
+    email?: string;
   };
   schedule: {
     monday: string;
@@ -52,63 +48,14 @@ interface StoreFormData {
     videoCalls: boolean;
     shipping: boolean;
   };
-  faqs: Array<{ // Implementado para 3 predefinidas, dinámicas requiere más UI
-    question: string;
-    answer: string;
-  }>;
   description: string;
-  termsAccepted: boolean; // Checkbox obligatorio
+  termsAccepted: boolean;
 }
 
-// Tipo auxiliar para hacer todas las propiedades, incluyendo las anidadas, opcionales.
-// Esto nos permitirá tener un estado de errores que "refleje" la estructura del formulario.
-type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
-
-// Definir el tipo para los errores de validación
-// Las hojas serán strings (el mensaje de error)
-type ValidationErrors = {
-    basicData?: {
-        localName?: string;
-        galleryType?: string;
-        localNumber?: string;
-    };
-    contactInfo?: {
-        whatsapp?: string;
-        phoneNumber?: string;
-        email?: string;
-    };
-    schedule?: {
-        monday?: string;
-        tuesday?: string;
-        wednesday?: string;
-        thursday?: string;
-        friday?: string;
-        saturday?: string;
-        sunday?: string;
-    };
-    features?: {
-        wholesale?: string;
-        retail?: string;
-        cardPayment?: string;
-        tryOnClothes?: string;
-        mercadoPago?: string;
-        meetingPoint?: string;
-        videoCalls?: string;
-        shipping?: string;
-    };
-    faqs?: Array<{
-        question?: string;
-        answer?: string;
-    }>;
-    description?: string | undefined;
-    termsAccepted?: string | undefined;
-};
-
-// Estado inicial del formulario con la nueva estructura
 const initialFormData: StoreFormData = {
   basicData: {
     localName: "",
-    galleryType: "Calle", // Default para el dropdown
+    galleryType: "Calle",
     localNumber: null,
   },
   contactInfo: {
@@ -137,246 +84,68 @@ const initialFormData: StoreFormData = {
     videoCalls: false,
     shipping: false,
   },
-  faqs: [
-    { question: "¿Cómo son los cambios y devoluciones?", answer: "" },
-    { question: "¿Cuáles son los métodos de pago?", answer: "" },
-    { question: "¿Realizan envíos internacionales?", answer: "" },
-  ],
   description: "",
   termsAccepted: false,
 };
-
-// Componentes estilizados mejorados
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-  backdropFilter: 'blur(8px)',
-  background: 'rgba(255, 255, 255, 0.9)',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15)',
-  }
-}));
-
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  marginBottom: theme.spacing(3),
-  color: theme.palette.primary.main,
-  fontWeight: 600,
-  position: 'relative',
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: -8,
-    left: 0,
-    width: '60px',
-    height: '3px',
-    background: theme.palette.primary.main,
-    borderRadius: '2px',
-  }
-}));
-
-const FormSection = styled(motion.div)(({ theme }) => ({
-  marginBottom: theme.spacing(4),
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
-  background: 'rgba(255, 255, 255, 0.5)',
-  backdropFilter: 'blur(4px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-}));
-
-// Componente de tarjeta animada
-const AnimatedCard = styled(motion.div)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderRadius: theme.spacing(2),
-  background: 'white',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 8px 12px rgba(0, 0, 0, 0.1)',
-  }
-}));
 
 export default function CreateStoreForm() {
   const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<StoreFormData>(initialFormData);
-  
-  // Estados para posibles errores de validación con el tipo simplificado
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
-    basicData: {},
-    contactInfo: {},
-    schedule: {},
-    features: {},
-    faqs: [],
-    description: undefined,
-    termsAccepted: undefined,
-  });
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
 
-  // Redireccionar si no está autenticado (similar a la página /store/new)
-   useEffect(() => {
+  useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.replace("/sign-in?redirect_url=/store/new");
     }
   }, [isLoaded, isSignedIn, router]);
 
-
-  const validateForm = (): boolean => {
-    const errors: ValidationErrors = {
-        basicData: {},
-        contactInfo: {},
-        schedule: {},
-        features: {},
-        faqs: formData.faqs.map(() => ({})),
-        description: undefined,
-        termsAccepted: undefined,
-    };
-    let isValid = true;
-
-    // Validaciones de Datos Básicos
-    if (!formData.basicData.localName) {
-        errors.basicData = { ...errors.basicData, localName: "El nombre del local es requerido." };
-        isValid = false;
-    } else if (formData.basicData.localName.length > 50) {
-        errors.basicData = { ...errors.basicData, localName: "Máx. 50 caracteres." };
-        isValid = false;
-    }
-
-    if (formData.basicData.localNumber === null || formData.basicData.localNumber < 0) {
-        errors.basicData = { ...errors.basicData, localNumber: "El número de local es requerido." };
-        isValid = false;
-    }
-
-    // Validaciones de Medios de Contacto
-    if (!formData.contactInfo.whatsapp) {
-        errors.contactInfo = { ...errors.contactInfo, whatsapp: "El número de Whatsapp es requerido." };
-        isValid = false;
-    }
-
-    // Validaciones de Preguntas Frecuentes
-    formData.faqs.forEach((faq, index) => {
-        if (!errors.faqs) errors.faqs = [];
-        if (!errors.faqs[index]) errors.faqs[index] = {};
-
-        if (!faq.question) {
-            errors.faqs[index] = { ...errors.faqs[index], question: "La pregunta es requerida." };
-            isValid = false;
-        } else if (faq.question.length > 100) {
-            errors.faqs[index] = { ...errors.faqs[index], question: "Máx. 100 caracteres." };
-            isValid = false;
-        }
-
-        if (!faq.answer) {
-            errors.faqs[index] = { ...errors.faqs[index], answer: "La respuesta es requerida." };
-            isValid = false;
-        } else if (faq.answer.length > 500) {
-            errors.faqs[index] = { ...errors.faqs[index], answer: "Máx. 500 caracteres." };
-            isValid = false;
-        }
-    });
-
-    // Validación de Descripción
-    if (formData.description.length > 500) {
-        errors.description = "Máx. 500 caracteres.";
-        isValid = false;
-    }
-
-    // Validación de Términos y Condiciones
-    if (!formData.termsAccepted) {
-        errors.termsAccepted = "Debes aceptar los términos y condiciones.";
-        isValid = false;
-    }
-
-    setValidationErrors(errors);
-    return isValid;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isSignedIn || !user?.id) {
-      toast.error("Debes iniciar sesión para crear una tienda");
-      router.replace("/sign-in?redirect_url=/store/new");
-      return;
-    }
-
-    if (!validateForm()) {
-        toast.error("Por favor, corrige los errores del formulario.");
-        return;
-    }
-
     setLoading(true);
+
     try {
-      // Preparar datos para Firestore
-      const storeDataForFirestore = {
-        ...formData.basicData,
-         // *** IMPORTANTE: Hashear la contraseña aquí antes de guardar ***
-        // password: await hashPassword(formData.basicData.password), // Ejemplo: implementar hashPassword
-        galleryType: formData.basicData.galleryType,
-        localNumber: formData.basicData.localNumber,
-        contactInfo: formData.contactInfo,
-        schedule: formData.schedule,
-        features: formData.features,
-        faqs: formData.faqs,
-        description: formData.description,
-        ownerId: user.id, // ID del usuario de Clerk como propietario
-        ownerEmail: user.primaryEmailAddress?.emailAddress || '',
+      const storeData = {
+        ...formData,
+        ownerId: user?.id,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        status: 'active',
-        rating: 0,
-        totalSales: 0,
-        totalProducts: 0,
       };
 
-      console.log("Datos de la tienda a crear (Firestore):", storeDataForFirestore);
-      
-      // Agregar documento a Firestore
-      const docRef = await addDoc(collection(db, "stores"), storeDataForFirestore);
-      console.log("Tienda creada con ID:", docRef.id);
-      
-      toast.success("Tienda creada exitosamente");
-      router.push(`/store/${docRef.id}`); // Redirigir a la página de la tienda recién creada
+      const docRef = await addDoc(collection(db, "stores"), storeData);
+      toast.success("¡Tienda creada exitosamente!");
+      router.push(`/store/${docRef.id}`);
     } catch (error) {
-      console.error("Error creating store:", error);
-      toast.error("Error al crear la tienda");
+      console.error("Error al crear la tienda:", error);
+      toast.error("Error al crear la tienda. Por favor, intenta nuevamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Manejar cambios en campos anidados (basicData, contactInfo, features, faqs)
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    const [section, field] = name.split('.');
-
-    if (section && field) {
-        setFormData(prev => {
-            const sectionData = prev[section as keyof StoreFormData];
-            if (typeof sectionData === 'object' && sectionData !== null) {
-                return {
-                    ...prev,
-                    [section]: {
-                        ...sectionData,
-                        [field]: value
-                    }
-                };
-            }
-            return prev;
-        });
-    } else {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    }
+  const handleInputChange = (section: keyof StoreFormData, field: string, value: any) => {
+    setFormData(prev => {
+      const sectionData = prev[section];
+      if (typeof sectionData === 'object' && sectionData !== null) {
+        return {
+          ...prev,
+          [section]: {
+            ...(sectionData as Record<string, any>),
+            [field]: value
+          }
+        };
+      }
+      return {
+        ...prev,
+        [section]: value
+      };
+    });
   };
 
   const handleCheckboxChange = (name: keyof StoreFormData['features'], checked: boolean) => {
-     setFormData(prev => ({
+    setFormData(prev => ({
       ...prev,
       features: {
         ...prev.features,
@@ -385,490 +154,295 @@ export default function CreateStoreForm() {
     }));
   };
 
-   const handleSelectChange = (name: keyof StoreFormData['schedule'] | 'galleryType', value: string) => {
-     if (name === 'galleryType') {
-       setFormData(prev => ({
-         ...prev,
-         basicData: {
-           ...prev.basicData,
-           galleryType: value
-         }
-       }));
-     } else {
-       // Asumimos campos de horario
-       setFormData(prev => ({
-         ...prev,
-         schedule: {
-           ...prev.schedule,
-           [name]: value
-         }
-       }));
-     }
-   };
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
 
-   const handleFAQChange = (index: number, field: keyof StoreFormData['faqs'][number], value: string) => {
-     setFormData(prev => {
-       const newFaqs = [...prev.faqs];
-       newFaqs[index] = { ...newFaqs[index], [field]: value };
-       return { ...prev, faqs: newFaqs };
-     });
-   };
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
 
-   const handleLocalNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-     const value = e.target.value;
-     const numValue = value === '' ? null : parseInt(value, 10);
-     setFormData(prev => ({
-       ...prev,
-       basicData: {
-         ...prev.basicData,
-         localNumber: numValue
-       }
-     }));
-   };
-
-   const handleTermsChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, termsAccepted: checked }));
-   };
-
-   const handleScheduleChange = (day: keyof StoreFormData['schedule'], value: string) => {
-     setFormData(prev => ({
-       ...prev,
-       schedule: {
-         ...prev.schedule,
-         [day]: value
-       }
-     }));
-   };
-
-   const handleGeneralScheduleToggle = (checked: boolean) => {
-     setFormData(prev => ({
-       ...prev,
-       schedule: {
-         ...prev.schedule,
-         useGeneralSchedule: checked,
-         // Si se activa el horario general, aplicarlo a todos los días
-         ...(checked ? {
-           monday: prev.schedule.generalSchedule,
-           tuesday: prev.schedule.generalSchedule,
-           wednesday: prev.schedule.generalSchedule,
-           thursday: prev.schedule.generalSchedule,
-           friday: prev.schedule.generalSchedule,
-           saturday: prev.schedule.generalSchedule,
-           sunday: prev.schedule.generalSchedule,
-         } : {})
-       }
-     }));
-   };
-
-  // Mostrar estado de carga o nada si no está autenticado
-  if (!isLoaded || !isSignedIn) {
-    // Si isLoaded es true pero !isSignedIn, useEffect redirigirá.
-    // Mientras carga, o si la redirección aún no ocurre, mostramos null o un spinner simple.
-     return (
-       <div className="flex justify-center items-center h-screen">
-         <div className="w-10 h-10 border-4 border-gray-200 rounded-full animate-spin border-t-blue-500"></div>
-       </div>
-     );
-  }
-
-  // Si está autenticado, mostrar el formulario
-  return (
-    <Container maxWidth="lg" className="py-8">
-      <motion.form 
-        onSubmit={handleSubmit}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <StyledPaper>
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              gutterBottom 
-              align="center" 
-              sx={{ 
-                mb: 4,
-                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 700
-              }}
-            >
-              Crear Nueva Tienda
-            </Typography>
-          </motion.div>
-
-          {/* Sección: Datos Básicos */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
+            className="space-y-6"
           >
-            <SectionTitle variant="h5">Datos Básicos</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AnimatedCard>
-                <Label htmlFor="basicData.localName" className="text-lg font-medium">
-                  Nombre del local <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="basicData.localName"
-                  name="basicData.localName"
-                  value={formData.basicData.localName}
-                  onChange={handleInputChange}
-                  required
-                  maxLength={50}
-                  className={cn(
-                    "mt-2 transition-all duration-300",
-                    !!validationErrors.basicData?.localName ? "border-red-500" : "hover:border-primary focus:border-primary"
-                  )}
-                />
-                {validationErrors.basicData?.localName && (
-                  <motion.p 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-red-500 text-sm mt-1"
-                  >
-                    {validationErrors.basicData.localName}
-                  </motion.p>
-                )}
-              </AnimatedCard>
-              <AnimatedCard>
-                <Label htmlFor="basicData.galleryType">Galería <span className="text-red-500">*</span></Label>
-                 <Select onValueChange={(value) => handleSelectChange('galleryType', value)} value={formData.basicData.galleryType}>
-                   <SelectTrigger id="basicData.galleryType" className={!!validationErrors.basicData?.galleryType ? "border-red-500" : ""}>
-                     <SelectValue placeholder="Selecciona un tipo" />
-                   </SelectTrigger>
-                   <SelectContent>
-                     <SelectItem value="Calle">Calle</SelectItem>
-                     <SelectItem value="Galeria">Galería</SelectItem>
-                     {/* Agrega más opciones según sea necesario */}
-                   </SelectContent>
-                 </Select>
-                  {validationErrors.basicData?.galleryType && <p className="text-red-500 text-sm mt-1">{validationErrors.basicData.galleryType}</p>}
-               </AnimatedCard>
-              <AnimatedCard>
-                <Label htmlFor="basicData.localNumber">Nº local <span className="text-red-500">*</span></Label>
-                <Input
-                  id="basicData.localNumber"
-                  name="basicData.localNumber"
-                  type="number"
-                  value={formData.basicData.localNumber === null ? '' : formData.basicData.localNumber}
-                  onChange={handleLocalNumberChange}
-                  required
-                  min={0}
-                  className={!!validationErrors.basicData?.localNumber ? "border-red-500" : ""}
-                />
-                 {validationErrors.basicData?.localNumber && <p className="text-red-500 text-sm mt-1">{validationErrors.basicData.localNumber}</p>}
-              </AnimatedCard>
+            <div className="flex items-center gap-2 text-lg font-medium mb-6">
+              <Store className="w-5 h-5" />
+              <span>Información Básica</span>
             </div>
-          </FormSection>
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Sección: Medios de Contacto */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="localName">Nombre del Local</Label>
+                <Input
+                  id="localName"
+                  value={formData.basicData.localName}
+                  onChange={(e) => handleInputChange('basicData', 'localName', e.target.value)}
+                  placeholder="Ej: Mi Tienda de Ropa"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="galleryType">Tipo de Local</Label>
+                <Select
+                  value={formData.basicData.galleryType}
+                  onValueChange={(value) => handleInputChange('basicData', 'galleryType', value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Selecciona el tipo de local" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Calle">Calle</SelectItem>
+                    <SelectItem value="Shopping">Shopping</SelectItem>
+                    <SelectItem value="Galeria">Galería</SelectItem>
+                    <SelectItem value="Otro">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="localNumber">Número de Local</Label>
+                <Input
+                  id="localNumber"
+                  type="number"
+                  value={formData.basicData.localNumber || ''}
+                  onChange={(e) => handleInputChange('basicData', 'localNumber', parseInt(e.target.value))}
+                  placeholder="Ej: 123"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+      case 2:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
+            className="space-y-6"
           >
-            <SectionTitle variant="h5">Medios de Contacto</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AnimatedCard>
-                <Label htmlFor="contactInfo.whatsapp">Whatsapp <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-2 text-lg font-medium mb-6">
+              <Phone className="w-5 h-5" />
+              <span>Información de Contacto</span>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="whatsapp">WhatsApp</Label>
                 <Input
-                  id="contactInfo.whatsapp"
-                  name="contactInfo.whatsapp"
+                  id="whatsapp"
                   value={formData.contactInfo.whatsapp}
-                  onChange={handleInputChange}
-                  required
-                  className={!!validationErrors.contactInfo?.whatsapp ? "border-red-500" : ""}
+                  onChange={(e) => handleInputChange('contactInfo', 'whatsapp', e.target.value)}
+                  placeholder="Ej: +54 9 11 1234-5678"
+                  className="mt-1"
                 />
-                 {validationErrors.contactInfo?.whatsapp && <p className="text-red-500 text-sm mt-1">{validationErrors.contactInfo.whatsapp}</p>}
-              </AnimatedCard>
-              <AnimatedCard>
-                <Label htmlFor="contactInfo.phoneNumber">Teléfono para llamadas</Label>
+              </div>
+              <div>
+                <Label htmlFor="phoneNumber">Teléfono (opcional)</Label>
                 <Input
-                  id="contactInfo.phoneNumber"
-                  name="contactInfo.phoneNumber"
+                  id="phoneNumber"
                   value={formData.contactInfo.phoneNumber}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange('contactInfo', 'phoneNumber', e.target.value)}
+                  placeholder="Ej: 011 1234-5678"
+                  className="mt-1"
                 />
-              </AnimatedCard>
-              <AnimatedCard>
-                <Label htmlFor="contactInfo.email">Email de contacto</Label>
+              </div>
+              <div>
+                <Label htmlFor="email">Email (opcional)</Label>
                 <Input
-                  id="contactInfo.email"
-                  name="contactInfo.email"
+                  id="email"
                   type="email"
                   value={formData.contactInfo.email}
-                  onChange={handleInputChange}
-                  // NOTA: Validar formato de email requiere más lógica o usar validación nativa del input type email
+                  onChange={(e) => handleInputChange('contactInfo', 'email', e.target.value)}
+                  placeholder="Ej: contacto@mitienda.com"
+                  className="mt-1"
                 />
-              </AnimatedCard>
+              </div>
             </div>
-          </FormSection>
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Sección: Horarios */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
+          </motion.div>
+        );
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
+            className="space-y-6"
           >
-            <SectionTitle variant="h5">Horarios</SectionTitle>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Configura los horarios de atención de tu tienda.
-            </Typography>
-
-            <Card 
-              variant="outlined" 
-              sx={{ 
-                mb: 3,
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-                }
-              }}
-            >
-              <CardContent>
-                <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center gap-2 text-lg font-medium mb-6">
+              <Clock className="w-5 h-5" />
+              <span>Horarios y Características</span>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
                   <Checkbox
                     id="useGeneralSchedule"
                     checked={formData.schedule.useGeneralSchedule}
-                    onCheckedChange={(checked) => handleGeneralScheduleToggle(typeof checked === 'boolean' ? checked : false)}
-                    className="transition-transform hover:scale-110"
+                    onCheckedChange={(checked) => handleInputChange('schedule', 'useGeneralSchedule', checked)}
                   />
-                  <Label htmlFor="useGeneralSchedule" className="text-lg">Usar horario general para todos los días</Label>
+                  <Label htmlFor="useGeneralSchedule">Usar horario general para todos los días</Label>
                 </div>
-
                 {formData.schedule.useGeneralSchedule ? (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Label htmlFor="generalSchedule" className="text-lg">Horario General</Label>
-                    <Select 
-                      onValueChange={(value) => handleScheduleChange('generalSchedule', value)} 
+                  <div>
+                    <Label htmlFor="generalSchedule">Horario General</Label>
+                    <Input
+                      id="generalSchedule"
                       value={formData.schedule.generalSchedule}
-                    >
-                      <SelectTrigger 
-                        id="generalSchedule"
-                        className="mt-2 transition-all hover:border-primary"
-                      >
-                        <SelectValue placeholder="Selecciona un horario" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="9:00 - 18:00">9:00 - 18:00</SelectItem>
-                        <SelectItem value="10:00 - 19:00">10:00 - 19:00</SelectItem>
-                        <SelectItem value="8:00 - 17:00">8:00 - 17:00</SelectItem>
-                        <SelectItem value="Cerrado">Cerrado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </motion.div>
-                ) : (
-                  <motion.div 
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {[
-                      { key: 'monday', label: 'Lunes' },
-                      { key: 'tuesday', label: 'Martes' },
-                      { key: 'wednesday', label: 'Miércoles' },
-                      { key: 'thursday', label: 'Jueves' },
-                      { key: 'friday', label: 'Viernes' },
-                      { key: 'saturday', label: 'Sábado' },
-                      { key: 'sunday', label: 'Domingo' }
-                    ].map(({ key, label }, index) => (
-                      <motion.div
-                        key={key}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <Label htmlFor={`schedule.${key}`} className="w-24 font-medium">{label}</Label>
-                        <Select 
-                          onValueChange={(value) => handleScheduleChange(key as Exclude<keyof StoreFormData['schedule'], 'useGeneralSchedule' | 'generalSchedule'>, value)} 
-                          value={formData.schedule[key as Exclude<keyof StoreFormData['schedule'], 'useGeneralSchedule' | 'generalSchedule'>]}
-                        >
-                          <SelectTrigger 
-                            id={`schedule.${key}`}
-                            className="transition-all hover:border-primary"
-                          >
-                            <SelectValue placeholder="Selecciona un horario" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="9:00 - 18:00">9:00 - 18:00</SelectItem>
-                            <SelectItem value="10:00 - 19:00">10:00 - 19:00</SelectItem>
-                            <SelectItem value="8:00 - 17:00">8:00 - 17:00</SelectItem>
-                            <SelectItem value="Cerrado">Cerrado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </CardContent>
-            </Card>
-          </FormSection>
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Sección: Características */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <SectionTitle variant="h5">Características</SectionTitle>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.keys(formData.features).map(feature => {
-                const featureKey = feature as keyof StoreFormData['features'];
-                const featureLabel = featureKey.replace(/([A-Z])/g, ' $1').trim().replace(/^(.)/, (match) => match.toUpperCase());
-                return (
-                  <AnimatedCard key={featureKey} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`features.${featureKey}`}
-                      checked={formData.features[featureKey]}
-                      onCheckedChange={(checked) => handleCheckboxChange(featureKey, typeof checked === 'boolean' ? checked : false)}
+                      onChange={(e) => handleInputChange('schedule', 'generalSchedule', e.target.value)}
+                      placeholder="Ej: 9:00 - 18:00"
+                      className="mt-1"
                     />
-                    <Label htmlFor={`features.${featureKey}`}>{featureLabel}</Label>
-                  </AnimatedCard>
-                );
-              })}
-            </div>
-          </FormSection>
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Sección: Preguntas Frecuentes */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.7 }}
-          >
-            <SectionTitle variant="h5">Preguntas Frecuentes</SectionTitle>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Edita las preguntas predefinidas. Campos marcados con <span className="text-red-500">*</span> son obligatorios.
-            </Typography>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {formData.faqs.map((faq, index) => (
-                <AnimatedCard key={index} className="col-span-1">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor={`faqs.${index}.question`}>Pregunta <span className="text-red-500">*</span></Label>
-                      <Input
-                        id={`faqs.${index}.question`}
-                        name={`faqs.${index}.question`}
-                        value={faq.question}
-                        onChange={(e) => handleFAQChange(index, 'question', e.target.value)}
-                        required
-                        maxLength={100}
-                        className={!!validationErrors.faqs?.[index]?.question ? "border-red-500" : ""}
-                      />
-                       {validationErrors.faqs?.[index]?.question && <p className="text-red-500 text-sm mt-1">{validationErrors.faqs[index].question}</p>}
-                    </div>
-                    <div>
-                      <Label htmlFor={`faqs.${index}.answer`}>Respuesta <span className="text-red-500">*</span></Label>
-                      <Textarea
-                        id={`faqs.${index}.answer`}
-                        name={`faqs.${index}.answer`}
-                        value={faq.answer}
-                        onChange={(e) => handleFAQChange(index, 'answer', e.target.value)}
-                        required
-                        maxLength={500}
-                        className={!!validationErrors.faqs?.[index]?.answer ? "border-red-500" : ""}
-                      />
-                        {validationErrors.faqs?.[index]?.answer && <p className="text-red-500 text-sm mt-1">{validationErrors.faqs[index].answer}</p>}
-                    </div>
                   </div>
-                </AnimatedCard>
-              ))}
-            </div>
-          </FormSection>
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Sección: Descripción */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8 }}
-          >
-            <SectionTitle variant="h5">Descripción</SectionTitle>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Breve descripción de tu local (máx. 500 caracteres).
-            </Typography>
-            <div>
-              <Label htmlFor="description">Descripción</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                maxLength={500}
-                className={!!validationErrors.description ? "border-red-500" : ""}
-              />
-               {validationErrors.description && <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>}
-            </div>
-          </FormSection>
-
-          <Divider sx={{ my: 4 }} />
-
-          {/* Sección: Términos y Condiciones */}
-          <FormSection
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.9 }}
-          >
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="termsAccepted"
-                checked={formData.termsAccepted}
-                onCheckedChange={(checked) => handleTermsChange(typeof checked === 'boolean' ? checked : false)}
-                className={!!validationErrors.termsAccepted ? "border-red-500" : ""}
-              />
-              <Label htmlFor="termsAccepted">
-                Acepto los <a href="/terms" className="underline" target="_blank">términos y condiciones</a> <span className="text-red-500">*</span>
-              </Label>
-            </div>
-             {validationErrors.termsAccepted && <p className="text-red-500 text-sm mt-1">{validationErrors.termsAccepted}</p>}
-          </FormSection>
-
-          <motion.div 
-            className="mt-8 flex justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Button 
-              type="submit" 
-              disabled={loading}
-              size="lg"
-              className="px-8 py-6 text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creando...</span>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((day) => {
+                      const dayKey = day.toLowerCase() as keyof typeof formData.schedule;
+                      const scheduleValue = formData.schedule[dayKey];
+                      return (
+                        <div key={day}>
+                          <Label htmlFor={dayKey}>{day}</Label>
+                          <Input
+                            id={dayKey}
+                            value={typeof scheduleValue === 'string' ? scheduleValue : ''}
+                            onChange={(e) => handleInputChange('schedule', dayKey, e.target.value)}
+                            placeholder="Ej: 9:00 - 18:00"
+                            className="mt-1"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                <Label>Características del Local</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(formData.features).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Checkbox
+                        id={key}
+                        checked={value}
+                        onCheckedChange={(checked) => handleCheckboxChange(key as keyof StoreFormData['features'], checked as boolean)}
+                      />
+                      <Label htmlFor={key} className="text-sm">
+                        {key === 'wholesale' ? 'Venta Mayorista' :
+                         key === 'retail' ? 'Venta Minorista' :
+                         key === 'cardPayment' ? 'Pago con Tarjeta' :
+                         key === 'tryOnClothes' ? 'Prueba de Ropa' :
+                         key === 'mercadoPago' ? 'Mercado Pago' :
+                         key === 'meetingPoint' ? 'Punto de Encuentro' :
+                         key === 'videoCalls' ? 'Video Llamadas' :
+                         'Envíos'}
+                      </Label>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                "Crear tienda"
-              )}
-            </Button>
+              </div>
+            </div>
           </motion.div>
-        </StyledPaper>
-      </motion.form>
-    </Container>
+        );
+      case 4:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center gap-2 text-lg font-medium mb-6">
+              <Info className="w-5 h-5" />
+              <span>Información Adicional</span>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="description">Descripción del Local</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', '', e.target.value)}
+                  placeholder="Describe tu local, los productos que ofreces y cualquier información relevante..."
+                  className="mt-1 min-h-[120px]"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="termsAccepted"
+                  checked={formData.termsAccepted}
+                  onCheckedChange={(checked) => handleInputChange('termsAccepted', '', checked)}
+                />
+                <Label htmlFor="termsAccepted" className="text-sm">
+                  Acepto los términos y condiciones de uso
+                </Label>
+              </div>
+            </div>
+          </motion.div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className={cn(
+              "w-5 h-5",
+              currentStep > 1 ? "text-green-500" : "text-gray-400"
+            )} />
+            <span className="text-sm font-medium">Paso {currentStep} de {totalSteps}</span>
+          </div>
+          <div className="flex gap-2">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  index + 1 === currentStep ? "bg-black" : "bg-gray-200"
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {renderStep()}
+
+      <div className="flex justify-between mt-8">
+        {currentStep > 1 && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevStep}
+            className="w-32"
+          >
+            Anterior
+          </Button>
+        )}
+        {currentStep < totalSteps ? (
+          <Button
+            type="button"
+            onClick={nextStep}
+            className={cn("w-32", currentStep === 1 ? "ml-auto" : "")}
+          >
+            Siguiente
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            className={cn("w-32", currentStep === 1 ? "ml-auto" : "")}
+            disabled={loading}
+          >
+            {loading ? "Creando..." : "Crear Tienda"}
+          </Button>
+        )}
+      </div>
+    </form>
   );
 } 
