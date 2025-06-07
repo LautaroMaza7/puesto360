@@ -22,7 +22,7 @@ const Header = () => {
               "text-4xl lg:text-[64px] lg:leading-[64px] mb-5 lg:mb-8",
             ])}
           >
-            FIND CLOTHES THAT MATCHES YOUR STYLE
+            GESTIONA TU COMERCIO TEXTIL DE FORMA INTELIGENTE
           </motion.h2>
           <motion.p
             initial={{ y: "100px", opacity: 0 }}
@@ -31,9 +31,8 @@ const Header = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-black/60 text-sm lg:text-base mb-6 lg:mb-8 max-w-[545px]"
           >
-            Browse through our diverse range of meticulously crafted garments,
-            designed to bring out your individuality and cater to your sense of
-            style.
+            Optimiza tu negocio textil con nuestra plataforma integral. Control de inventario, 
+            gestión de ventas y análisis de datos en un solo lugar.
           </motion.p>
           <motion.div
             initial={{ y: "100px", opacity: 0 }}
@@ -45,7 +44,7 @@ const Header = () => {
               href="/shop"
               className="w-full md:w-52 mb-5 md:mb-12 inline-block text-center bg-black hover:bg-black/80 transition-all text-white px-14 py-4 rounded-full hover:animate-pulse"
             >
-              Shop Now
+              Comenzar Ahora
             </Link>
           </motion.div>
           <motion.div
@@ -60,7 +59,7 @@ const Header = () => {
                 <AnimatedCounter from={0} to={200} />+
               </span>
               <span className="text-xs xl:text-base text-black/60 text-nowrap">
-                International Brands
+                Comercios Activos
               </span>
             </div>
             <Separator
@@ -72,7 +71,7 @@ const Header = () => {
                 <AnimatedCounter from={0} to={2000} />+
               </span>
               <span className="text-xs xl:text-base text-black/60 text-nowrap">
-                High-Quality Products
+                Productos Gestionados
               </span>
             </div>
             <Separator
@@ -84,7 +83,7 @@ const Header = () => {
                 <AnimatedCounter from={0} to={3000} />+
               </span>
               <span className="text-xs xl:text-base text-black/60 text-nowrap">
-                Happy Customers
+                Ventas Realizadas
               </span>
             </div>
           </motion.div>
