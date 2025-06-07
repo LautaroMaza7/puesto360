@@ -32,7 +32,7 @@ const brandsData: { id: string; srcUrl: string }[] = [
 
 const Brands = () => {
   return (
-    <div className="text-[rgb(246,190,103)] w-full">
+    <div className="bg-[rgb(246,190,103)] w-full">
       {/* Mobile: Slider automático */}
       <div className="block md:hidden py-4">
         <Swiper

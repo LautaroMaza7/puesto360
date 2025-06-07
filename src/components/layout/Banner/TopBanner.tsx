@@ -82,7 +82,7 @@ const TopBanner = () => {
   };
 
   return (
-    <div className="text-[rgb(246,190,103)] text-white py-3 px-2 sm:px-4 xl:px-0 relative overflow-hidden">
+    <div className="bg-[rgb(246,190,103)] text-white py-3 px-2 sm:px-4 xl:px-0 relative overflow-hidden">
       <div className="relative mx-auto flex items-center justify-center">
         {/* Botón Anterior */}
         <Button
