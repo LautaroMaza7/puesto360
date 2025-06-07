@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import AgeVerificationModal from "@/components/common/AgeVerificationModal";
 import ProductGrid from "@/components/shop-page/ProductGrid";
 import { Skeleton } from "@/components/ui/skeleton";
-import Header from "@/components/layout/Header";
+import Header from "@/components/homepage/Header";
 import Brands from "@/components/homepage/Brands";
 import DressStyle from "@/components/homepage/DressStyle";
 import Reviews from "@/components/homepage/Reviews";
