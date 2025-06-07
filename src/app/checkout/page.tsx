@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, collection } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { saveAddressToFirestore } from "@/lib/saveAddressToFirestore";
 import BreadcrumbCheckout from "@/components/cart-page/BreadcrumbCheckout";
@@ -69,6 +69,29 @@ export default function CheckoutPage() {
   const [useSavedInfo, setUseSavedInfo] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [shippingMethod, setShippingMethod] = useState('delivery');
+  const [userData, setUserData] = useState<any>(null);
+
+  // Efecto para obtener datos del usuario desde Firestore
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!isSignedIn || !user?.id) return;
+
+      try {
+        const userDocRef = doc(db, "users", user.id);
+        const userSnap = await getDoc(userDocRef);
+        
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setUserData(data);
+          console.log('Datos del usuario cargados:', data);
+        }
+      } catch (error) {
+        console.error('Error cargando datos del usuario:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [isSignedIn, user?.id]);
 
   // Efecto para scroll al cambiar de paso
   useEffect(() => {
@@ -89,10 +112,10 @@ export default function CheckoutPage() {
     resolver: zodResolver(stepOneSchema(true)),
     mode: "onTouched",
     defaultValues: {
-      email: "",
-      fullName: "",
-      phone: "",
-      dni: "",
+      email: userData?.email || "",
+      fullName: userData?.name || "",
+      phone: userData?.phone || "",
+      dni: userData?.dni || "",
     },
   });
 
@@ -106,12 +129,15 @@ export default function CheckoutPage() {
     mode: "onTouched",
   });
 
-  // Setear el email del usuario una vez esté disponible
+  // Actualizar valores del formulario cuando se cargan los datos del usuario
   useEffect(() => {
-    if (user?.primaryEmailAddress?.emailAddress) {
-      methodsStepOne.setValue("email", user.primaryEmailAddress.emailAddress);
+    if (userData) {
+      methodsStepOne.setValue("email", userData.email || "");
+      methodsStepOne.setValue("fullName", userData.name || "");
+      methodsStepOne.setValue("phone", userData.phone || "");
+      methodsStepOne.setValue("dni", userData.dni || "");
     }
-  }, [user, methodsStepOne]);
+  }, [userData, methodsStepOne]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -143,14 +169,15 @@ export default function CheckoutPage() {
     try {
       console.log("📝 Datos Step 1:", data);
 
-      if (user?.primaryEmailAddress?.emailAddress && !useSavedInfo) {
-        const data = {
-          email: user.primaryEmailAddress.emailAddress,
-          name: user.fullName,
-          createdAt: serverTimestamp(),
+      if (user?.id) {
+        const userData = {
+          email: data.email,
+          name: data.fullName,
+          phone: data.phone,
+          dni: data.dni,
           updatedAt: serverTimestamp()
         };
-        await setDoc(doc(db, "users", user.primaryEmailAddress.emailAddress), data, { merge: true });
+        await setDoc(doc(db, "users", user.id), userData, { merge: true });
         console.log("✅ Datos del usuario guardados en Firestore correctamente");
       }
 
@@ -164,8 +191,12 @@ export default function CheckoutPage() {
     try {
       console.log("📦 Dirección Step 2:", data);
 
-      if (user?.primaryEmailAddress?.emailAddress) {
-        await saveAddressToFirestore(user.primaryEmailAddress.emailAddress, data);
+      if (user?.id) {
+        const addressData = {
+          ...data,
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(doc(db, "users", user.id), { address: addressData }, { merge: true });
         console.log("✅ Dirección guardada correctamente en Firestore");
       }
 
@@ -188,19 +219,44 @@ export default function CheckoutPage() {
       return;
     }
 
-    const allData = {
-      ...methodsStepOne.getValues(),
-      ...methodsStepTwo.getValues(),
-      ...methodsStepThree.getValues(),
-      cart: checkoutCart,
-    };
+    try {
+      if (user?.id) {
+        const orderData = {
+          user: {
+            id: user.id,
+            email: methodsStepOne.getValues().email,
+            name: methodsStepOne.getValues().fullName,
+            phone: methodsStepOne.getValues().phone,
+            dni: methodsStepOne.getValues().dni,
+          },
+          address: methodsStepTwo.getValues(),
+          payment: methodsStepThree.getValues(),
+          cart: checkoutCart,
+          status: 'pending',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
 
-    console.log("🎉 Checkout finalizado. Datos completos:", allData);
+        // Crear la orden en Firestore
+        const orderRef = doc(collection(db, "orders"));
+        await setDoc(orderRef, orderData);
+        console.log("✅ Orden creada correctamente en Firestore");
 
-    alert("🎉 Checkout finalizado correctamente");
+        // Limpiar el carrito
+        if (userData?.email) {
+          const cartRef = doc(db, "carts", userData.email);
+          await setDoc(cartRef, { items: [] });
+        }
+        localStorage.removeItem("checkout_cart");
+        console.log("🧹 Carrito eliminado post-checkout");
 
-    localStorage.removeItem("checkout_cart");
-    console.log("🧹 Carrito eliminado de localStorage post-checkout");
+        alert("🎉 ¡Gracias por tu compra! Te enviaremos un email con los detalles.");
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("❌ Error creando la orden:", error);
+      alert("Hubo un error al procesar tu orden. Por favor, intenta de nuevo.");
+    }
   };
 
   // Calcular totales para el OrderSummary
