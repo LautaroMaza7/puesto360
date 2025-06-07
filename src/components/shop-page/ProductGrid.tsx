@@ -1,45 +1,53 @@
-import React from 'react';
-import ProductCard from '@/components/common/ProductCard';
-import { motion } from 'framer-motion';
-import { Product } from '@/types/product';
+"use client";
+
+import { Product } from "@/types/product";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface ProductGridProps {
   products: Product[];
+  title?: string;
+  viewAllLink?: string;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
-  if (products.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          No se encontraron productos
-        </h3>
-        <p className="text-gray-600">
-          Intenta ajustar los filtros para ver más resultados
-        </p>
-      </div>
-    );
-  }
-
+export default function ProductGrid({ products, title, viewAllLink }: ProductGridProps) {
   return (
-    <motion.div
-      layout
-      className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
-    >
-      {products.map((product) => (
-        <motion.div
-          key={product.id}
-          layout
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          <ProductCard data={product} variant="shop" />
-        </motion.div>
-      ))}
-    </motion.div>
+    <section className="mb-16">
+      {title && (
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold">{title}</h2>
+          {viewAllLink && (
+            <Button variant="ghost" asChild>
+              <Link href={viewAllLink}>Ver todo</Link>
+            </Button>
+          )}
+        </div>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="bg-white rounded-lg shadow-sm overflow-hidden"
+          >
+            <div className="aspect-square bg-gray-200 relative">
+              {product.images?.[0] && (
+                <img
+                  src={product.images[0]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+            <div className="p-4">
+              <h3 className="font-semibold mb-2">{product.name}</h3>
+              <p className="text-gray-600 mb-2">${product.price}</p>
+              <Button className="w-full" asChild>
+                <Link href={`/product/${product.id}`}>Ver Detalles</Link>
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
-};
-
-export default ProductGrid; 
+} 

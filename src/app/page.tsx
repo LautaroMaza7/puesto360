@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button";
 import AgeVerificationModal from "@/components/common/AgeVerificationModal";
 import ProductGrid from "@/components/shop-page/ProductGrid";
 import { Skeleton } from "@/components/ui/skeleton";
+import Header from "@/components/layout/Header";
+import Brands from "@/components/homepage/Brands";
+import DressStyle from "@/components/homepage/DressStyle";
+import Reviews from "@/components/homepage/Reviews";
+import { reviewsData } from "@/lib/data/reviews";
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -18,60 +23,60 @@ export default function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-      const querySnapshot = await getDocs(collection(db, "products"));
-      const fetchedProducts = querySnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          let createdAt: Date;
-          try {
-            createdAt = data.createdAt?.toDate?.() || new Date();
-          } catch (error) {
-            console.warn('Error al convertir timestamp:', error);
-            createdAt = new Date();
-          }
+        const querySnapshot = await getDocs(collection(db, "products"));
+        const fetchedProducts = querySnapshot.docs
+          .map((doc) => {
+            const data = doc.data();
+            let createdAt: Date;
+            try {
+              createdAt = data.createdAt?.toDate?.() || new Date();
+            } catch (error) {
+              console.warn('Error al convertir timestamp:', error);
+              createdAt = new Date();
+            }
 
-          const product: Product = {
-            id: doc.id,
+            const product: Product = {
+              id: doc.id,
               storeId: data.storeId || '',
-            title: data.title || '',
-            name: data.name || '',
-            description: data.description || '',
-            price: data.price || 0,
-            images: data.images || [],
-            srcUrl: data.srcUrl || '',
-            category: data.category || '',
-            subcategory: data.subcategory || '',
-            stock: data.stock || 0,
-            discount: {
-              amount: data.discount?.amount || 0,
-              percentage: data.discount?.percentage || 0
-            },
-            freeShipping: data.freeShipping ?? false,
-            createdAt: createdAt,
-            sales: data.sales || 0,
-            rating: data.rating || 0,
-            active: data.active ?? true,
-            specialOffer: data.specialOffer ?? false,
-            newArrival: data.newArrival ?? false,
-            featuredBrand: data.featuredBrand ?? false,
-            promos: data.promos || [],
+              title: data.title || '',
+              name: data.name || '',
+              description: data.description || '',
+              price: data.price || 0,
+              images: data.images || [],
+              srcUrl: data.srcUrl || '',
+              category: data.category || '',
+              subcategory: data.subcategory || '',
+              stock: data.stock || 0,
+              discount: {
+                amount: data.discount?.amount || 0,
+                percentage: data.discount?.percentage || 0
+              },
+              freeShipping: data.freeShipping ?? false,
+              createdAt: createdAt,
+              sales: data.sales || 0,
+              rating: data.rating || 0,
+              active: data.active ?? true,
+              specialOffer: data.specialOffer ?? false,
+              newArrival: data.newArrival ?? false,
+              featuredBrand: data.featuredBrand ?? false,
+              promos: data.promos || [],
               updatedAt: data.updatedAt?.toDate?.() || createdAt
-          };
+            };
 
-          return product;
-        })
-        .filter((product) => product.active)
-        .sort((a, b) => {
-          return b.createdAt.getTime() - a.createdAt.getTime();
+            return product;
+          })
+          .filter((product) => product.active)
+          .sort((a, b) => {
+            return b.createdAt.getTime() - a.createdAt.getTime();
           });
-    
-      setProducts(fetchedProducts);
+
+        setProducts(fetchedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
         setLoading(false);
       }
-    };    
+    };
 
     fetchProducts();
   }, []);
@@ -105,7 +110,7 @@ export default function Home() {
   }
 
   if (loading) {
-  return (
+    return (
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
@@ -123,48 +128,37 @@ export default function Home() {
   }
 
   return (
-    <main>
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Productos Textiles al Por Mayor y Menor
-          </h1>
-          <p className="text-xl md:text-2xl mb-8">
-            Encuentra la mejor selección de productos textiles para tu negocio
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button
-              onClick={() => window.location.href = '/shop'}
-              className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg rounded-full"
-            >
-              Ver Catálogo
-            </Button>
-            <Button
-              onClick={() => window.location.href = '/contact'}
-              className="bg-transparent border-2 border-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg rounded-full"
-            >
-              Contactar Vendedor
-            </Button>
-          </div>
+    <>
+      <Header />
+      <Brands />
+      <main className="my-[50px] sm:my-[72px]">
+        <ProductGrid
+          title="NUEVOS INGRESOS"
+          products={products.filter(p => p.newArrival)}
+          viewAllLink="/shop#new-arrivals"
+        />
+        <div className="max-w-frame mx-auto px-4 xl:px-0">
+          <hr className="h-[1px] border-t-black/10 my-10 sm:my-16" />
         </div>
-            </div>
-
-      <div className="container mx-auto px-4 py-12">
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">Productos Destacados</h2>
-          <ProductGrid products={products.filter(p => p.featuredBrand)} />
-        </section>
-
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">Nuevos Ingresos</h2>
-          <ProductGrid products={products.filter(p => p.newArrival)} />
-        </section>
-
-        <section>
-          <h2 className="text-3xl font-bold mb-8">Ofertas Especiales</h2>
-          <ProductGrid products={products.filter(p => p.specialOffer)} />
-        </section>
-            </div>
-          </main>
+        <div className="mb-[50px] sm:mb-20">
+          <ProductGrid
+            title="PRODUCTOS DESTACADOS"
+            products={products.filter(p => p.featuredBrand)}
+            viewAllLink="/shop#featured"
+          />
+        </div>
+        <div className="mb-[50px] sm:mb-20">
+          <DressStyle />
+        </div>
+        <div className="mb-[50px] sm:mb-20">
+          <ProductGrid
+            title="OFERTAS ESPECIALES"
+            products={products.filter(p => p.specialOffer)}
+            viewAllLink="/shop#special-offers"
+          />
+        </div>
+        <Reviews data={reviewsData} />
+      </main>
+    </>
   );
 }
