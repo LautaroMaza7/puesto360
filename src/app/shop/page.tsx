@@ -1,203 +1,238 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FilterProvider, useFilter } from "@/context/FilterContext";
+import { useSearchParams, useRouter } from "next/navigation";
+import BreadcrumbShop from "@/components/shop-page/BreadcrumbShop";
+import { FiSliders } from "react-icons/fi";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import MobileFilters from "@/components/shop-page/filters/MobileFilters";
+import Filters from "@/components/shop-page/filters";
+import ProductGrid from '@/components/shop-page/ProductGrid';
+import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { Product } from "@/types/product";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, orderBy, Query } from "firebase/firestore";
-import ProductGrid from "@/components/shop-page/ProductGrid";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 
-export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
-  const [priceRange, setPriceRange] = useState("all");
+type SortOption = 'most-popular' | 'low-price' | 'high-price' | 'newest';
+type FilterType = 'specialOffer' | 'newArrival' | 'featuredBrand' | 'freeShipping';
+
+function ShopContent() {
+  const { 
+    filteredProducts, 
+    setSortOption, 
+    loading,
+    specialOffer,
+    newArrival,
+    featuredBrand,
+    freeShipping,
+    setSpecialOffer,
+    setNewArrival,
+    setFeaturedBrand,
+    setFreeShipping
+  } = useFilter();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const sort = searchParams?.get('sort') as SortOption | null;
+  const filter = searchParams?.get('filter');
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 9;
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        let productsQuery: Query = collection(db, "products");
-        
-        // Aplicar filtros
-        if (category && category !== "all") {
-          productsQuery = query(productsQuery, where("category", "==", category));
-        }
-        
-        // Aplicar ordenamiento
-        switch (sortBy) {
-          case "price-asc":
-            productsQuery = query(productsQuery, orderBy("price", "asc"));
-            break;
-          case "price-desc":
-            productsQuery = query(productsQuery, orderBy("price", "desc"));
-            break;
-          case "newest":
-          default:
-            productsQuery = query(productsQuery, orderBy("createdAt", "desc"));
-            break;
-        }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
-        /*  */
+  useEffect(() => {
+    if (sort) {
+      setSortOption(sort);
+    }
+  }, [sort, setSortOption]);
 
-        const querySnapshot = await getDocs(productsQuery);
-        const fetchedProducts = querySnapshot.docs
-          .map((doc) => {
-            const data = doc.data();
-            let createdAt: Date;
-            try {
-              createdAt = data.createdAt?.toDate?.() || new Date();
-            } catch (error) {
-              console.warn('Error al convertir timestamp:', error);
-              createdAt = new Date();
-            }
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, sort, specialOffer, newArrival, featuredBrand, freeShipping]);
 
-            const product: Product = {
-              id: doc.id,
-              storeId: data.storeId || '',
-              title: data.title || '',
-              name: data.name || '',
-              description: data.description || '',
-              price: data.price || 0,
-              images: data.images || [],
-              srcUrl: data.srcUrl || '',
-              category: data.category || '',
-              subcategory: data.subcategory || '',
-              stock: data.stock || 0,
-              discount: {
-                amount: data.discount?.amount || 0,
-                percentage: data.discount?.percentage || 0
-              },
-              freeShipping: data.freeShipping ?? false,
-              createdAt: createdAt,
-              sales: data.sales || 0,
-              rating: data.rating || 0,
-              active: data.active ?? true,
-              specialOffer: data.specialOffer ?? false,
-              newArrival: data.newArrival ?? false,
-              featuredBrand: data.featuredBrand ?? false,
-              promos: data.promos || [],
-              updatedAt: data.updatedAt?.toDate?.() || createdAt
-            };
+  useEffect(() => {
+    if (filter) {
+      const filters = filter.split(',') as FilterType[];
+      setSpecialOffer(filters.includes('specialOffer'));
+      setNewArrival(filters.includes('newArrival'));
+      setFeaturedBrand(filters.includes('featuredBrand'));
+      setFreeShipping(filters.includes('freeShipping'));
+    } else {
+      setSpecialOffer(false);
+      setNewArrival(false);
+      setFeaturedBrand(false);
+      setFreeShipping(false);
+    }
+  }, [filter, setSpecialOffer, setNewArrival, setFeaturedBrand, setFreeShipping]);
 
-            return product;
-          })
-          .filter((product) => product.active);
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-        // Aplicar filtro de precio
-        let filteredProducts = fetchedProducts;
-        if (priceRange !== "all") {
-          const [min, max] = priceRange.split("-").map(Number);
-          filteredProducts = fetchedProducts.filter(
-            (product) => product.price >= min && product.price <= max
-          );
-        }
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
-        // Aplicar búsqueda
-        if (searchTerm) {
-          const searchLower = searchTerm.toLowerCase();
-          filteredProducts = filteredProducts.filter(
-            (product) =>
-              product.title.toLowerCase().includes(searchLower) ||
-              product.description.toLowerCase().includes(searchLower) ||
-              product.category.toLowerCase().includes(searchLower)
-          );
-        }
+  const handleSortChange = (value: SortOption) => {
+    if (!searchParams) return;
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.set('sort', value);
+    router.push(`/shop?${newParams.toString()}`);
+  };
 
-        setProducts(filteredProducts);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
+  const handleFilterChange = (filterType: FilterType, value: boolean) => {
+    if (!searchParams) return;
+    const newParams = new URLSearchParams(searchParams.toString());
+    const currentFilters = newParams.get('filter')?.split(',') || [];
+    
+    if (value) {
+      if (!currentFilters.includes(filterType)) {
+        currentFilters.push(filterType);
       }
-    };
-
-    fetchProducts();
-  }, [category, sortBy, priceRange, searchTerm]);
+    } else {
+      const index = currentFilters.indexOf(filterType);
+      if (index > -1) {
+        currentFilters.splice(index, 1);
+      }
+    }
+    
+    if (currentFilters.length > 0) {
+      newParams.set('filter', currentFilters.join(','));
+    } else {
+      newParams.delete('filter');
+    }
+    
+    router.push(`/shop?${newParams.toString()}`);
+  };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <Skeleton className="h-48 w-full" />
-              <div className="p-4">
-                <Skeleton className="h-6 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
       </div>
     );
   }
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-8">Catálogo de Productos Textiles</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Input
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="md:col-span-2"
-          />
-          
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              <SelectItem value="telas">Telas</SelectItem>
-              <SelectItem value="accesorios">Accesorios</SelectItem>
-              <SelectItem value="confeccion">Confección</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={priceRange} onValueChange={setPriceRange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Rango de precio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los precios</SelectItem>
-              <SelectItem value="0-1000">Hasta $1,000</SelectItem>
-              <SelectItem value="1000-5000">$1,000 - $5,000</SelectItem>
-              <SelectItem value="5000-10000">$5,000 - $10,000</SelectItem>
-              <SelectItem value="10000-999999">Más de $10,000</SelectItem>
-            </SelectContent>
-          </Select>
+    <main className="pb-20">
+      <div className="max-w-frame mx-auto px-4 xl:px-0">
+        <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
+        <BreadcrumbShop />
+        <div className="flex md:space-x-5 items-start">
+          <div className="hidden md:block min-w-[295px] max-w-[295px] bg-white rounded-xl shadow-lg border border-gray-100 px-5 md:px-6 py-5 space-y-5 md:space-y-6">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-black text-xl">Filtros</span>
+              <FiSliders className="text-2xl text-black/40" />
+            </div>
+            <Filters />
           </div>
 
-        <div className="flex justify-end mb-8">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Ordenar por" />
+          <div className="flex-1">
+            <div className="flex flex-col lg:flex-row lg:justify-between mb-6">
+              <div className="flex items-center justify-between">
+                <h1 className="font-bold text-2xl md:text-[32px]">Bebidas</h1>
+                <MobileFilters />
+              </div>
+              <div className="flex flex-col sm:items-center sm:flex-row mt-4 lg:mt-0">
+                <span className="text-sm md:text-base text-black/60 mr-3">
+                  Mostrando {filteredProducts.length} Productos
+                </span>
+                <div className="flex items-center">
+                  Ordenar por:{" "}
+                  <Select 
+                    defaultValue={sort || "most-popular"} 
+                    onValueChange={handleSortChange}
+                  >
+                    <SelectTrigger className="font-medium text-sm px-1.5 sm:text-base w-fit text-black bg-transparent shadow-none border-none">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-              <SelectItem value="newest">Más recientes</SelectItem>
-              <SelectItem value="price-asc">Menor precio</SelectItem>
-              <SelectItem value="price-desc">Mayor precio</SelectItem>
+                      <SelectItem value="most-popular">Más Popular</SelectItem>
+                      <SelectItem value="low-price">Precio Bajo</SelectItem>
+                      <SelectItem value="high-price">Precio Alto</SelectItem>
+                      <SelectItem value="newest">Más Recientes</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+            </div>
 
-      {products.length === 0 ? (
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold mb-4">No se encontraron productos</h2>
-          <p className="text-gray-600">Intenta con otros filtros o términos de búsqueda</p>
+            <ProductGrid products={currentProducts} />
+
+            {filteredProducts.length > productsPerPage && (
+              <>
+                <hr className="border-t-black/10 mt-8" />
+                <div className="flex justify-between items-center mt-6">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`flex items-center gap-1 px-2.5 py-2 rounded-md border border-black/10 ${
+                      currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <ArrowLeftIcon className="h-4 w-4" />
+                    <span>Anterior</span>
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`w-9 h-9 flex items-center justify-center rounded-md ${
+                          currentPage === page
+                            ? 'bg-black/5 text-black'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`flex items-center gap-1 px-2.5 py-2 rounded-md border border-black/10 ${
+                      currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>Siguiente</span>
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      ) : (
-        <ProductGrid products={products} />
-      )}
+      </div>
     </main>
+  );
+}
+
+export default function ShopPage() {
+  const searchParams = useSearchParams();
+
+  const category = searchParams?.get('category');
+  const subcategory = searchParams?.get('subcategory');
+  const sort = searchParams?.get('sort') as SortOption | null;
+  const filter = searchParams?.get('filter');
+
+  return (
+    <FilterProvider initialFilters={{
+      selectedCategory: category,
+      selectedSubcategory: subcategory,
+      sortOption: sort || 'most-popular',
+      filter: filter
+    }}>
+      <ShopContent />
+    </FilterProvider>
   );
 }
