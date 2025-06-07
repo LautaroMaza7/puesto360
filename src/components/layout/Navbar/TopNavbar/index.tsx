@@ -498,11 +498,11 @@ const TopNavbar = () => {
             ])}
           >
             <Image
-              src="/images/logo.jpg"
+              src="/images/logo.png"
               alt="Puesto360 Logo"
               width={40}
               height={40}
-              className="rounded-full"
+              className=""
             />
             Puesto<span className="text-orange-500">360</span>
           </Link>
