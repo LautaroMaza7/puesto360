@@ -148,13 +148,13 @@ export default function Home() {
         <div className="mb-[50px] sm:mb-20">
           <DressStyle />
         </div>
-        <div className="mb-[50px] sm:mb-20">
+        {/* <div className="mb-[50px] sm:mb-20">
           <ProductListSec
             title="OFERTAS ESPECIALES"
             products={products.filter(p => p.specialOffer)}
             viewAllLink="/shop#special-offers"
           />
-        </div>
+        </div> */}
       </main>
     </>
   );
